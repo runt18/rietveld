@@ -66,8 +66,7 @@ def get_links_for_users(user_emails):
   accounts = models.Account.get_accounts_for_emails(remaining_emails)
   for account in accounts:
     if account and account.user_has_selected_nickname:
-      ret = ('<a href="%s" onMouseOver="M_showUserInfoPopup(this)">%s</a>' %
-             (reverse('codereview.views.show_user', args=[account.nickname]),
+      ret = ('<a href="{0!s}" onMouseOver="M_showUserInfoPopup(this)">{1!s}</a>'.format(reverse('codereview.views.show_user', args=[account.nickname]),
               cgi.escape(account.nickname)))
       link_dict[account.email] = ret
 
@@ -180,7 +179,7 @@ class UrlAppendViewSettingsNode(django.template.Node):
     if current_context is None:
       url_params.append('context=')
     elif isinstance(current_context, int) and current_context > 0:
-      url_params.append('context=%d' % current_context)
+      url_params.append('context={0:d}'.format(current_context))
 
     current_colwidth = None
     try:
@@ -188,10 +187,10 @@ class UrlAppendViewSettingsNode(django.template.Node):
     except django.template.VariableDoesNotExist:
       pass
     if current_colwidth is not None:
-      url_params.append('column_width=%d' % current_colwidth)
+      url_params.append('column_width={0:d}'.format(current_colwidth))
 
     if url_params:
-      return '?%s' % '&'.join(url_params)
+      return '?{0!s}'.format('&'.join(url_params))
     return ''
 
 @register.tag
@@ -281,7 +280,7 @@ def nickname(_parser, token):
       never_me = ''
     except ValueError:
       raise django.template.TemplateSyntaxError(
-        "%r requires exactly one or two arguments" % token.contents.split()[0])
+        "{0!r} requires exactly one or two arguments".format(token.contents.split()[0]))
   return NicknameNode(email_address, never_me)
 
 
@@ -322,12 +321,12 @@ def format_duration(seconds):
   hours -= days * 24
   out = []
   if days > 0:
-    out.append('%dd' % days)
+    out.append('{0:d}d'.format(days))
   if hours > 0 or days > 0:
-    out.append('%02dh' % hours)
+    out.append('{0:02d}h'.format(hours))
   if minutes > 0 or hours > 0 or days > 0:
-    out.append('%02dm' % minutes)
+    out.append('{0:02d}m'.format(minutes))
   if seconds > 0 and not out:
     # Skip seconds unless there's only seconds.
-    out.append('%02ds' % seconds)
+    out.append('{0:02d}s'.format(seconds))
   return prefix + ''.join(out).lstrip('0')

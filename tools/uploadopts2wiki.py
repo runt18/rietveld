@@ -31,7 +31,7 @@ class GCWikiHelpFormatter (HelpFormatter):
         HelpFormatter.dedent(self)
 
     def format_usage(self, usage):
-        return "*Usage summary:* `%s`\n" % usage
+        return "*Usage summary:* `{0!s}`\n".format(usage)
 
     def format_heading(self, heading):
         if self._dl_open:
@@ -40,14 +40,14 @@ class GCWikiHelpFormatter (HelpFormatter):
             pre = ''
         markup = '='*(self.current_indent+2)
         self._dl_open = True
-        return "%s%s %s %s\n<dl>\n" % (pre, markup, heading, markup)
+        return "{0!s}{1!s} {2!s} {3!s}\n<dl>\n".format(pre, markup, heading, markup)
 
     def format_option(self, option):
         result = []
         opts = self.option_strings[option]
-        result.append('<dt>`%s`</dt>\n' % opts)
+        result.append('<dt>`{0!s}`</dt>\n'.format(opts))
         if option.help:
-            help_text = '<dd>%s</dd>\n' % self.expand_default(option)
+            help_text = '<dd>{0!s}</dd>\n'.format(self.expand_default(option))
             result.append(help_text)
         return ''.join(result)
 

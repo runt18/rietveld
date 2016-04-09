@@ -126,7 +126,7 @@ def issue_required(func):
     issue = models.Issue.get_by_id(int(issue_id))
     if issue is None:
       return HttpTextResponse(
-          'No issue exists with that id (%s)' % issue_id, status=404)
+          'No issue exists with that id ({0!s})'.format(issue_id), status=404)
     if issue.private:
       if request.user is None:
         return HttpResponseRedirect(
@@ -215,8 +215,7 @@ def patch_required(func):
     patch = models.Patch.get_by_id(int(patch_id), parent=request.patchset.key)
     if patch is None:
       return HttpTextResponse(
-          'No patch exists with that id (%s/%s)' %
-          (request.patchset.key.id(), patch_id),
+          'No patch exists with that id ({0!s}/{1!s})'.format(request.patchset.key.id(), patch_id),
           status=404)
     patch.patchset_key = request.patchset.key
     request.patch = patch
@@ -246,7 +245,7 @@ def require_methods(*methods):
     def wrapped(request, *args, **kwds):
       if request.method not in methods:
         allowed = ', '.join(methods)
-        rsp = HttpTextResponse('This requires a specific method: %s' % allowed,
+        rsp = HttpTextResponse('This requires a specific method: {0!s}'.format(allowed),
                                status=405)
         rsp['Allow'] = allowed
         return rsp
@@ -298,9 +297,9 @@ def user_key_required(func):
     else:
       account = models.Account.get_account_for_nickname(user_key)
       if not account:
-        logging.info("account not found for nickname %s" % user_key)
+        logging.info("account not found for nickname {0!s}".format(user_key))
         return HttpTextResponse(
-            'No user found with that key (%s)' % urllib.quote(user_key),
+            'No user found with that key ({0!s})'.format(urllib.quote(user_key)),
             status=404)
       request.user_to_show = account.user
     return func(request, *args, **kwds)
@@ -317,7 +316,7 @@ def patchset_required(func):
       int(patchset_id), parent=request.issue.key)
     if patchset is None:
       return HttpTextResponse(
-          'No patch set exists with that id (%s)' % patchset_id, status=404)
+          'No patch set exists with that id ({0!s})'.format(patchset_id), status=404)
     patchset.issue_key = request.issue.key
     request.patchset = patchset
     return func(request, *args, **kwds)
@@ -353,7 +352,7 @@ def xsrf_required(func):
                         u'However, this was the data posted to the server:',
                         u''])
             for key in request.POST:
-              msg.append(u'%s: %s' % (key, request.POST[key]))
+              msg.append(u'{0!s}: {1!s}'.format(key, request.POST[key]))
             msg.extend([u'', u'-'*10,
                         u'Please reload the previous page and post again.'])
           return HttpTextResponse(u'\n'.join(msg), status=403)

@@ -14,7 +14,7 @@ def delete_unused_accounts(account):
     return
   if Issue.query(Issue.reviewers == email).get():
     return
-  logging.warn('Deleting %s' % email)
+  logging.warn('Deleting {0!s}'.format(email))
   yield op.db.Delete(account)
 
 

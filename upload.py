@@ -187,7 +187,7 @@ def GetEmail(prompt):
       last_email_file = open(last_email_file_name, "r")
       last_email = last_email_file.readline().strip("\n")
       last_email_file.close()
-      prompt += " [%s]" % last_email
+      prompt += " [{0!s}]".format(last_email)
     except IOError as e:
       pass
   email = raw_input(prompt + ": ").strip()
@@ -349,8 +349,7 @@ class AbstractRpcServer(object):
     # This is a dummy value to allow us to identify when we're successful.
     continue_location = "http://localhost/"
     args = {"continue": continue_location, "auth": auth_token}
-    req = self._CreateRequest("%s/_ah/login?%s" %
-                              (self.host, urllib.urlencode(args)))
+    req = self._CreateRequest("{0!s}/_ah/login?{1!s}".format(self.host, urllib.urlencode(args)))
     try:
       response = self.opener.open(req)
     except urllib2.HTTPError as e:
@@ -453,7 +452,7 @@ class AbstractRpcServer(object):
       while True:
         tries += 1
         args = dict(kwargs)
-        url = "%s%s" % (self.host, request_path)
+        url = "{0!s}{1!s}".format(self.host, request_path)
         if args:
           url += "?" + urllib.urlencode(args)
         req = self._CreateRequest(url=url, data=payload)
@@ -477,11 +476,11 @@ class AbstractRpcServer(object):
             # Handle permanent redirect manually.
             url = e.info()["location"]
             url_loc = urlparse.urlparse(url)
-            self.host = '%s://%s' % (url_loc[0], url_loc[1])
+            self.host = '{0!s}://{1!s}'.format(url_loc[0], url_loc[1])
           elif e.code >= 500:
             # TODO: We should error out on a 500, but the server is too flaky
             # for that at the moment.
-            StatusUpdate('Upload got a 500 response: %d' % e.code)
+            StatusUpdate('Upload got a 500 response: {0:d}'.format(e.code))
           else:
             raise
     finally:
@@ -496,12 +495,12 @@ class HttpRpcServer(AbstractRpcServer):
     if isinstance(self.auth_function, OAuth2Creds):
       access_token = self.auth_function()
       if access_token is not None:
-        self.extra_headers['Authorization'] = 'OAuth %s' % (access_token,)
+        self.extra_headers['Authorization'] = 'OAuth {0!s}'.format(access_token)
         self.authenticated = True
     else:
       super(HttpRpcServer, self)._Authenticate()
       if self.save_cookies:
-        StatusUpdate("Saving authentication cookies to %s" % self.cookie_file)
+        StatusUpdate("Saving authentication cookies to {0!s}".format(self.cookie_file))
         self.cookie_jar.save()
 
   def _GetOpener(self):
@@ -524,8 +523,8 @@ class HttpRpcServer(AbstractRpcServer):
         try:
           self.cookie_jar.load()
           self.authenticated = True
-          StatusUpdate("Loaded authentication cookies from %s" %
-                       self.cookie_file)
+          StatusUpdate("Loaded authentication cookies from {0!s}".format(
+                       self.cookie_file))
         except (cookielib.LoadError, IOError):
           # Failed to load cookies - just ignore them.
           pass
@@ -548,7 +547,7 @@ class CondensedHelpFormatter(optparse.IndentedHelpFormatter):
       '-o ARG, --opt=ARG' to -o --opt ARG"""
 
    def format_heading(self, heading):
-     return "%s:\n" % heading
+     return "{0!s}:\n".format(heading)
 
    def format_option(self, option):
      self.dedent()
@@ -670,8 +669,7 @@ group.add_option("-p", "--send_patch", action="store_true",
                       "attachment, and prepend email subject with 'PATCH:'.")
 group.add_option("--vcs", action="store", dest="vcs",
                  metavar="VCS", default=None,
-                 help=("Explicitly specify version control system (%s)"
-                       % ", ".join(VCS_SHORT_NAMES)))
+                 help=("Explicitly specify version control system ({0!s})".format(", ".join(VCS_SHORT_NAMES))))
 group.add_option("--emulate_svn_auto_props", action="store_true",
                  dest="emulate_svn_auto_props", default=False,
                  help=("Emulate Subversion's auto properties feature."))
@@ -783,7 +781,7 @@ def OpenOAuth2ConsentPage(server=DEFAULT_REVIEW_SERVER,
   # If no scheme was given on command line the server address ends up in
   # parsed_url.path otherwise in netloc.
   host = parsed_url[1] or parsed_url[2]
-  page = '%s://%s%s' % (scheme, host, path)
+  page = '{0!s}://{1!s}{2!s}'.format(scheme, host, path)
   page_opened = webbrowser.open(page, new=1, autoraise=True)
   if page_opened:
     print OPEN_LOCAL_MESSAGE_TEMPLATE % (page,)
@@ -837,11 +835,11 @@ def GetAccessToken(server=DEFAULT_REVIEW_SERVER, port=DEFAULT_OAUTH2_PORT,
       try:
         access_token = WaitForAccessToken(port=port)
       except socket.error as e:
-        print 'Can\'t start local webserver. Socket Error: %s\n' % (e.strerror,)
+        print 'Can\'t start local webserver. Socket Error: {0!s}\n'.format(e.strerror)
 
   if access_token is None:
     # TODO(dhermes): Offer to add to clipboard using xsel, xclip, pbcopy, etc.
-    page = 'https://%s%s' % (server, OAUTH_PATH)
+    page = 'https://{0!s}{1!s}'.format(server, OAUTH_PATH)
     print NO_OPEN_LOCAL_MESSAGE_TEMPLATE % (page,)
     access_token = raw_input('Enter access token: ').strip()
 
@@ -870,7 +868,7 @@ class KeyringCreds(object):
     global keyring
     email = self.email
     if email is None:
-      email = GetEmail("Email (login for uploading to %s)" % self.server)
+      email = GetEmail("Email (login for uploading to {0!s})".format(self.server))
     password = None
     if keyring and not email in self.accounts_seen:
       try:
@@ -884,7 +882,7 @@ class KeyringCreds(object):
       print "Using password from system keyring."
       self.accounts_seen.add(email)
     else:
-      password = getpass.getpass("Password for %s: " % email)
+      password = getpass.getpass("Password for {0!s}: ".format(email))
       if keyring:
         answer = raw_input("Store password in system keyring?(y/N) ").strip()
         if answer == "y":
@@ -936,13 +934,13 @@ def GetRpcServer(server, email=None, host_override=None, save_cookies=True,
   if re.match(r'(http://)?localhost([:/]|$)', host):
     if email is None:
       email = "test@example.com"
-      LOGGER.info("Using debug user %s.  Override with --email" % email)
+      LOGGER.info("Using debug user {0!s}.  Override with --email".format(email))
     server = HttpRpcServer(
         server,
         lambda: (email, "password"),
         host_override=host_override,
         extra_headers={"Cookie":
-                       'dev_appserver_login="%s:False"' % email},
+                       'dev_appserver_login="{0!s}:False"'.format(email)},
         save_cookies=save_cookies,
         account_type=account_type)
     # Don't try to talk to ClientLogin.
@@ -979,16 +977,15 @@ def EncodeMultipartFormData(fields, files):
   lines = []
   for (key, value) in fields:
     lines.append('--' + BOUNDARY)
-    lines.append('Content-Disposition: form-data; name="%s"' % key)
+    lines.append('Content-Disposition: form-data; name="{0!s}"'.format(key))
     lines.append('')
     if isinstance(value, unicode):
       value = value.encode('utf-8')
     lines.append(value)
   for (key, filename, value) in files:
     lines.append('--' + BOUNDARY)
-    lines.append('Content-Disposition: form-data; name="%s"; filename="%s"' %
-             (key, filename))
-    lines.append('Content-Type: %s' % GetContentType(filename))
+    lines.append('Content-Disposition: form-data; name="{0!s}"; filename="{1!s}"'.format(key, filename))
+    lines.append('Content-Type: {0!s}'.format(GetContentType(filename)))
     lines.append('')
     if isinstance(value, unicode):
       value = value.encode('utf-8')
@@ -996,7 +993,7 @@ def EncodeMultipartFormData(fields, files):
   lines.append('--' + BOUNDARY + '--')
   lines.append('')
   body = CRLF.join(lines)
-  content_type = 'multipart/form-data; boundary=%s' % BOUNDARY
+  content_type = 'multipart/form-data; boundary={0!s}'.format(BOUNDARY)
   return content_type, body
 
 
@@ -1060,9 +1057,9 @@ def RunShell(command, silent_ok=False, universal_newlines=True,
   data, retcode = RunShellWithReturnCode(command, print_output,
                                          universal_newlines, env)
   if retcode:
-    ErrorExit("Got error status from %s:\n%s" % (command, data))
+    ErrorExit("Got error status from {0!s}:\n{1!s}".format(command, data))
   if not silent_ok and not data:
-    ErrorExit("No output from %s" % command)
+    ErrorExit("No output from {0!s}".format(command))
   return data
 
 
@@ -1081,7 +1078,7 @@ class VersionControlSystem(object):
     """Return string to distinguish the repository from others, for example to
     query all opened review issues for it"""
     raise NotImplementedError(
-        "abstract method -- subclass %s must override" % self.__class__)
+        "abstract method -- subclass {0!s} must override".format(self.__class__))
 
   def PostProcessDiff(self, diff):
     """Return the diff with any special post processing this VCS needs, e.g.
@@ -1095,12 +1092,12 @@ class VersionControlSystem(object):
       args: Extra arguments to pass to the diff command.
     """
     raise NotImplementedError(
-        "abstract method -- subclass %s must override" % self.__class__)
+        "abstract method -- subclass {0!s} must override".format(self.__class__))
 
   def GetUnknownFiles(self):
     """Return a list of files unknown to the VCS."""
     raise NotImplementedError(
-        "abstract method -- subclass %s must override" % self.__class__)
+        "abstract method -- subclass {0!s} must override".format(self.__class__))
 
   def CheckForUnknownFiles(self):
     """Show an "are you sure?" prompt if there are unknown files."""
@@ -1128,7 +1125,7 @@ class VersionControlSystem(object):
     """
 
     raise NotImplementedError(
-        "abstract method -- subclass %s must override" % self.__class__)
+        "abstract method -- subclass {0!s} must override".format(self.__class__))
 
 
   def GetBaseFiles(self, diff):
@@ -1162,14 +1159,13 @@ class VersionControlSystem(object):
       else:
         type = "current"
       if len(content) > MAX_UPLOAD_SIZE:
-        result = ("Not uploading the %s file for %s because it's too large." %
-            (type, filename))
+        result = ("Not uploading the {0!s} file for {1!s} because it's too large.".format(type, filename))
         file_too_large = True
         content = ""
       elif options.verbose:
-        result = "Uploading %s file for %s" % (type, filename)
+        result = "Uploading {0!s} file for {1!s}".format(type, filename)
       checksum = md5(content).hexdigest()
-      url = "/%d/upload_content/%d/%d" % (int(issue), int(patchset), file_id)
+      url = "/{0:d}/upload_content/{1:d}/{2:d}".format(int(issue), int(patchset), file_id)
       form_fields = [("filename", filename),
                      ("status", status),
                      ("checksum", checksum),
@@ -1185,11 +1181,10 @@ class VersionControlSystem(object):
       try:
         response_body = rpc_server.Send(url, body, content_type=ctype)
       except urllib2.HTTPError as e:
-        response_body = ("Failed to upload file for %s. Got %d status code." %
-            (filename, e.code))
+        response_body = ("Failed to upload file for {0!s}. Got {1:d} status code.".format(filename, e.code))
 
       if not response_body.startswith("OK"):
-        StatusUpdate("  --> %s" % response_body)
+        StatusUpdate("  --> {0!s}".format(response_body))
         sys.exit(1)
 
       return result
@@ -1242,7 +1237,7 @@ class SubversionVCS(VersionControlSystem):
     if self.options.revision:
       match = re.match(r"(\d+)(:(\d+))?", self.options.revision)
       if not match:
-        ErrorExit("Invalid Subversion revision %s." % self.options.revision)
+        ErrorExit("Invalid Subversion revision {0!s}.".format(self.options.revision))
       self.rev_start = match.group(1)
       self.rev_end = match.group(3)
     else:
@@ -1299,7 +1294,7 @@ class SubversionVCS(VersionControlSystem):
   def _EscapeFilename(self, filename):
     """Escapes filename for SVN commands."""
     if "@" in filename and not filename.endswith("@"):
-      filename = "%s@" % filename
+      filename = "{0!s}@".format(filename)
     return filename
 
   def GenerateDiff(self, args):
@@ -1341,12 +1336,12 @@ class SubversionVCS(VersionControlSystem):
 
     def repl(m):
        if m.group(2):
-         return "$%s::%s$" % (m.group(1), " " * len(m.group(3)))
-       return "$%s$" % m.group(1)
+         return "${0!s}::{1!s}$".format(m.group(1), " " * len(m.group(3)))
+       return "${0!s}$".format(m.group(1))
     keywords = [keyword
                 for name in keyword_str.split(" ")
                 for keyword in svn_keywords.get(name, [])]
-    return re.sub(r"\$(%s):(:?)([^\$]+)\$" % '|'.join(keywords), repl, content)
+    return re.sub(r"\$({0!s}):(:?)([^\$]+)\$".format('|'.join(keywords)), repl, content)
 
   def GetUnknownFiles(self):
     status = RunShell(["svn", "status", "--ignore-externals"], silent_ok=True)
@@ -1372,7 +1367,7 @@ class SubversionVCS(VersionControlSystem):
       status = RunShell(["svn", "status", "--ignore-externals",
                          self._EscapeFilename(filename)])
       if not status:
-        ErrorExit("svn status returned no output for %s" % filename)
+        ErrorExit("svn status returned no output for {0!s}".format(filename))
       status_lines = status.splitlines()
       # If file is in a cl, the output will begin with
       # "\n--- Changelist 'cl_name':\n".  See
@@ -1398,7 +1393,7 @@ class SubversionVCS(VersionControlSystem):
           if re.match('^svn: Unable to find repository location for .+ in revision \d+', err):
             old_files = ()
           else:
-            ErrorExit("Failed to get status for %s:\n%s" % (filename, err))
+            ErrorExit("Failed to get status for {0!s}:\n{1!s}".format(filename, err))
         else:
           old_files = out.splitlines()
         args = ["svn", "list"]
@@ -1407,7 +1402,7 @@ class SubversionVCS(VersionControlSystem):
         cmd = args + [self._EscapeFilename(dirname) or "."]
         out, returncode = RunShellWithReturnCode(cmd)
         if returncode:
-          ErrorExit("Failed to run command %s" % cmd)
+          ErrorExit("Failed to run command {0!s}".format(cmd))
         self.svnls_cache[dirname] = (old_files, out.splitlines())
       old_files, new_files = self.svnls_cache[dirname]
       if relfilename in old_files and relfilename not in new_files:
@@ -1442,7 +1437,7 @@ class SubversionVCS(VersionControlSystem):
       args = []
       if self.options.revision:
         # filename must not be escaped. We already add an ampersand here.
-        url = "%s/%s@%s" % (self.svn_base, filename, self.rev_start)
+        url = "{0!s}/{1!s}@{2!s}".format(self.svn_base, filename, self.rev_start)
       else:
         # Don't change filename, it's needed later.
         url = filename
@@ -1471,7 +1466,7 @@ class SubversionVCS(VersionControlSystem):
           if not self.rev_end:
             new_content = self.ReadFile(filename)
           else:
-            url = "%s/%s@%s" % (self.svn_base, filename, self.rev_end)
+            url = "{0!s}/{1!s}@{2!s}".format(self.svn_base, filename, self.rev_end)
             new_content = RunShell(["svn", "cat", url],
                                    universal_newlines=True, silent_ok=True)
       else:
@@ -1485,7 +1480,7 @@ class SubversionVCS(VersionControlSystem):
         if self.rev_start:
           # "svn cat -r REV delete_file.txt" doesn't work. cat requires
           # the full URL with "@REV" appended instead of using "-r" option.
-          url = "%s/%s@%s" % (self.svn_base, filename, self.rev_start)
+          url = "{0!s}/{1!s}@{2!s}".format(self.svn_base, filename, self.rev_start)
           base_content = RunShell(["svn", "cat", url],
                                   universal_newlines=universal_newlines,
                                   silent_ok=True)
@@ -1496,16 +1491,16 @@ class SubversionVCS(VersionControlSystem):
           if ret_code and status[0] == "R":
             # It's a replaced file without local history (see issue208).
             # The base file needs to be fetched from the server.
-            url = "%s/%s" % (self.svn_base, filename)
+            url = "{0!s}/{1!s}".format(self.svn_base, filename)
             base_content = RunShell(["svn", "cat", url],
                                     universal_newlines=universal_newlines,
                                     silent_ok=True)
           elif ret_code:
-            ErrorExit("Got error status from 'svn cat %s'" % filename)
+            ErrorExit("Got error status from 'svn cat {0!s}'".format(filename))
         if not is_binary:
           args = []
           if self.rev_start:
-            url = "%s/%s@%s" % (self.svn_base, filename, self.rev_start)
+            url = "{0!s}/{1!s}@{2!s}".format(self.svn_base, filename, self.rev_start)
           else:
             url = filename
             args += ["-r", "BASE"]
@@ -1514,7 +1509,7 @@ class SubversionVCS(VersionControlSystem):
           if keywords and not returncode:
             base_content = self._CollapseKeywords(base_content, keywords)
     else:
-      StatusUpdate("svn status returned unexpected output: %s" % status)
+      StatusUpdate("svn status returned unexpected output: {0!s}".format(status))
       sys.exit(1)
     return base_content, new_content, is_binary, status[0:5]
 
@@ -1574,7 +1569,7 @@ class GitVCS(VersionControlSystem):
         filecount += 1
         # Intentionally use the "after" filename so we can show renames.
         filename = match.group(2)
-        svndiff.append("Index: %s\n" % filename)
+        svndiff.append("Index: {0!s}\n".format(filename))
         if match.group(1) != match.group(2):
           self.renames[match.group(2)] = match.group(1)
       else:
@@ -1624,11 +1619,11 @@ class GitVCS(VersionControlSystem):
         env=env, silent_ok=True)
     assert 0 <= self.options.git_similarity <= 100
     if self.options.git_find_copies:
-      similarity_options = ["-l100000", "-C%d%%" % self.options.git_similarity]
+      similarity_options = ["-l100000", "-C{0:d}%".format(self.options.git_similarity)]
       if self.options.git_find_copies_harder:
         similarity_options.append("--find-copies-harder")
     else:
-      similarity_options = ["-M%d%%" % self.options.git_similarity ]
+      similarity_options = ["-M{0:d}%".format(self.options.git_similarity) ]
     diff += RunShell(
         cmd + ["--diff-filter=AMCRT"] + similarity_options + extra_args,
         env=env, silent_ok=True)
@@ -1636,7 +1631,7 @@ class GitVCS(VersionControlSystem):
     # The CL could be only file deletion or not. So accept silent diff for both
     # commands then check for an empty diff manually.
     if not diff:
-      ErrorExit("No output from %s" % (cmd + extra_args))
+      ErrorExit("No output from {0!s}".format((cmd + extra_args)))
     return diff
 
   def GetUnknownFiles(self):
@@ -1649,7 +1644,7 @@ class GitVCS(VersionControlSystem):
     data, retcode = RunShellWithReturnCode(["git", "show", file_hash],
                                             universal_newlines=False)
     if retcode:
-      ErrorExit("Got error status from 'git show %s'" % file_hash)
+      ErrorExit("Got error status from 'git show {0!s}'".format(file_hash))
     return data
 
   def GetBaseFile(self, filename):
@@ -1715,11 +1710,11 @@ class CVSVCS(VersionControlSystem):
 
     output, retcode = RunShellWithReturnCode(["cvs", "status", filename])
     if retcode:
-      ErrorExit("Got error status from 'cvs status %s'" % filename)
+      ErrorExit("Got error status from 'cvs status {0!s}'".format(filename))
 
     if output.find("Status: Locally Modified") != -1:
       status = "M"
-      temp_filename = "%s.tmp123" % filename
+      temp_filename = "{0!s}.tmp123".format(filename)
       os.rename(filename, temp_filename)
       base_content = self.GetOriginalContent_(filename)
       os.rename(temp_filename, filename)
@@ -1754,7 +1749,7 @@ class CVSVCS(VersionControlSystem):
   def GetUnknownFiles(self):
     data, retcode = RunShellWithReturnCode(["cvs", "diff"])
     if retcode not in [0, 1]:
-      ErrorExit("Got error status from 'cvs diff':\n%s" % (data,))
+      ErrorExit("Got error status from 'cvs diff':\n{0!s}".format(data))
     unknown_files = []
     for line in data.split("\n"):
       if line and line[0] == "?":
@@ -1807,7 +1802,7 @@ class MercurialVCS(VersionControlSystem):
         # NOTE: for proper handling of moved/copied files, we have to use
         # the second filename.
         filename = m.group(2)
-        svndiff.append("Index: %s" % filename)
+        svndiff.append("Index: {0!s}".format(filename))
         svndiff.append("=" * 67)
         filecount += 1
         LOGGER.info(line)
@@ -1841,7 +1836,7 @@ class MercurialVCS(VersionControlSystem):
     out = out.splitlines()
     # HACK: strip error message about missing file/directory if it isn't in
     # the working copy
-    if out[0].startswith('%s: ' % relpath):
+    if out[0].startswith('{0!s}: '.format(relpath)):
       out = out[1:]
     status, _ = out[0].split(' ', 1)
     if len(out) > 1 and status == "A":
@@ -1941,7 +1936,7 @@ class PerforceVCS(VersionControlSystem):
     data, retcode = self.RunPerforceCommandWithReturnCode(
         extra_args, marshal_output, universal_newlines)
     if retcode:
-      ErrorExit("Got error status from %s:\n%s" % (extra_args, data))
+      ErrorExit("Got error status from {0!s}:\n{1!s}".format(extra_args, data))
     return data
 
   def GetFileProperties(self, property_key_prefix = "", command = "describe"):
@@ -1952,7 +1947,7 @@ class PerforceVCS(VersionControlSystem):
     file_index = 0
     # Try depotFile0, depotFile1, ... until we don't find a match
     while True:
-      file_key = "depotFile%d" % file_index
+      file_key = "depotFile{0:d}".format(file_index)
       if file_key in description:
         filename = description[file_key]
         change_type = description[property_key_prefix + str(file_index)]
@@ -1979,7 +1974,7 @@ class PerforceVCS(VersionControlSystem):
   def IsBinaryHelper(self, filename, command):
     file_types = self.GetFileProperties("type", command)
     if not filename in file_types:
-      ErrorExit("Trying to check binary status of unknown file %s." % filename)
+      ErrorExit("Trying to check binary status of unknown file {0!s}.".format(filename))
     # This treats symlinks, macintosh resource files, temporary objects, and
     # unicode as binary. See the Perforce docs for more details:
     # http://www.perforce.com/perforce/doc.current/manuals/cmdref/o.ftypes.html
@@ -2042,7 +2037,7 @@ class PerforceVCS(VersionControlSystem):
 
     def GenerateDiffHeader(diffData):
       header = []
-      header.append("Index: %s" % diffData.filename)
+      header.append("Index: {0!s}".format(diffData.filename))
       header.append("=" * 67)
 
       if diffData.base_filename != diffData.filename:
@@ -2050,10 +2045,10 @@ class PerforceVCS(VersionControlSystem):
           verb = "rename"
         else:
           verb = "copy"
-        header.append("%s from %s" % (verb, diffData.base_filename))
-        header.append("%s to %s" % (verb, diffData.filename))
+        header.append("{0!s} from {1!s}".format(verb, diffData.base_filename))
+        header.append("{0!s} to {1!s}".format(verb, diffData.filename))
 
-      suffix = "\t(revision %s)" % diffData.base_rev
+      suffix = "\t(revision {0!s})".format(diffData.base_rev)
       header.append("--- " + diffData.base_filename + suffix)
       if diffData.working_copy:
         suffix = "\t(working copy)"
@@ -2093,7 +2088,7 @@ class PerforceVCS(VersionControlSystem):
       line_count = len(diffData.file_body.splitlines())
       diffData.change_summary = "@@ -0,0 +1"
       if line_count > 1:
-          diffData.change_summary += ",%d" % line_count
+          diffData.change_summary += ",{0:d}".format(line_count)
       diffData.change_summary += " @@"
       diffData.prefix = "+"
       return diffData
@@ -2109,7 +2104,7 @@ class PerforceVCS(VersionControlSystem):
       line_count = len(diffData.file_body.splitlines())
       diffData.change_summary = "@@ -1"
       if line_count > 1:
-        diffData.change_summary += ",%d" % line_count
+        diffData.change_summary += ",{0:d}".format(line_count)
       diffData.change_summary += " +0,0 @@"
       diffData.prefix = "-"
       return diffData
@@ -2133,8 +2128,7 @@ class PerforceVCS(VersionControlSystem):
       elif svn_status == "D":
         diffData = GenerateDeleteDiff(diffData)
       else:
-        ErrorExit("Unknown file action %s (svn action %s)." % \
-                  (action, svn_status))
+        ErrorExit("Unknown file action {0!s} (svn action {1!s}).".format(action, svn_status))
 
       svndiff += GenerateDiffHeader(diffData)
 
@@ -2162,7 +2156,7 @@ class PerforceVCS(VersionControlSystem):
   def GetAction(self, filename):
     changed_files = self.GetChangedFiles()
     if not filename in changed_files:
-      ErrorExit("Trying to get base version of unknown file %s." % filename)
+      ErrorExit("Trying to get base version of unknown file {0!s}.".format(filename))
 
     return changed_files[filename]
 
@@ -2176,7 +2170,7 @@ class PerforceVCS(VersionControlSystem):
     if status != "A":
       revision = self.GetBaseRevision(base_filename)
       if not revision:
-        ErrorExit("Couldn't find base revision for file %s" % filename)
+        ErrorExit("Couldn't find base revision for file {0!s}".format(filename))
       is_base_binary = self.IsBaseBinary(base_filename)
       base_content = self.GetFileContent(base_filename,
                                          revision,
@@ -2242,17 +2236,16 @@ def UploadSeparatePatches(issue, rpc_server, patchset, data, options):
       form_fields.append(("content_upload", "1"))
     files = [("data", "data.diff", data)]
     ctype, body = EncodeMultipartFormData(form_fields, files)
-    url = "/%d/upload_patch/%d" % (int(issue), int(patchset))
+    url = "/{0:d}/upload_patch/{1:d}".format(int(issue), int(patchset))
 
     try:
       response_body = rpc_server.Send(url, body, content_type=ctype)
     except urllib2.HTTPError as e:
-      response_body = ("Failed to upload patch for %s. Got %d status code." %
-          (filename, e.code))
+      response_body = ("Failed to upload patch for {0!s}. Got {1:d} status code.".format(filename, e.code))
 
     lines = response_body.splitlines()
     if not lines or lines[0] != "OK":
-      StatusUpdate("  --> %s" % response_body)
+      StatusUpdate("  --> {0!s}".format(response_body))
       sys.exit(1)
     return ("Uploaded patch for " + filename, [lines[1], filename])
 
@@ -2362,7 +2355,7 @@ def GuessVCS(options):
   if vcs:
     v = VCS_ABBREVIATIONS.get(vcs.lower())
     if v is None:
-      ErrorExit("Unknown version control system %r specified." % vcs)
+      ErrorExit("Unknown version control system {0!r} specified.".format(vcs))
     (vcs, extra_output) = (v, None)
   else:
     (vcs, extra_output) = GuessVCSName(options)
@@ -2396,10 +2389,10 @@ def CheckReviewer(reviewer):
     return  # Assume nickname
   parts = reviewer.split("@")
   if len(parts) > 2:
-    ErrorExit("Invalid email address: %r" % reviewer)
+    ErrorExit("Invalid email address: {0!r}".format(reviewer))
   assert len(parts) == 2
   if "." not in parts[1]:
-    ErrorExit("Invalid email address: %r" % reviewer)
+    ErrorExit("Invalid email address: {0!r}".format(reviewer))
 
 
 def LoadSubversionAutoProperties():
@@ -2503,7 +2496,7 @@ def FormatSubversionPropertyChanges(filename, props):
   <BLANKLINE>
   """
   prop_changes_lines = [
-    "Property changes on: %s" % filename,
+    "Property changes on: {0!s}".format(filename),
     "___________________________________________________________________"]
   for key, value in props:
     prop_changes_lines.append("Added: " + key)
@@ -2553,8 +2546,7 @@ def RealMain(argv, data=None):
     guessed_base = vcs.GuessBase(options.download_base)
     if base:
       if guessed_base and base != guessed_base:
-        print "Using base URL \"%s\" from --base_url instead of \"%s\"" % \
-            (base, guessed_base)
+        print "Using base URL \"{0!s}\" from --base_url instead of \"{1!s}\"".format(base, guessed_base)
     else:
       base = guessed_base
 

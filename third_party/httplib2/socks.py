@@ -169,8 +169,8 @@ class socksocket(socket.socket):
             endpt = endpt.split(" ")
             if (self.__proxy[4] != None and self.__proxy[5] != None):
                 hdrs.insert(0, self.__getauthheader())
-            hdrs.insert(0, "Host: %s" % host)
-            hdrs.insert(0, "%s http://%s%s %s" % (endpt[0], host, endpt[1], endpt[2]))
+            hdrs.insert(0, "Host: {0!s}".format(host))
+            hdrs.insert(0, "{0!s} http://{1!s}{2!s} {3!s}".format(endpt[0], host, endpt[1], endpt[2]))
         return "\r\n".join(hdrs)
 
     def __getauthheader(self):

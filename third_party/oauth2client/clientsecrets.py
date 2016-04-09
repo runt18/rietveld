@@ -72,17 +72,17 @@ def _validate_clientsecrets(obj):
     raise InvalidClientSecretsError('Invalid file format.')
   client_type = obj.keys()[0]
   if client_type not in VALID_CLIENT.keys():
-    raise InvalidClientSecretsError('Unknown client type: %s.' % client_type)
+    raise InvalidClientSecretsError('Unknown client type: {0!s}.'.format(client_type))
   client_info = obj[client_type]
   for prop_name in VALID_CLIENT[client_type]['required']:
     if prop_name not in client_info:
       raise InvalidClientSecretsError(
-        'Missing property "%s" in a client type of "%s".' % (prop_name,
+        'Missing property "{0!s}" in a client type of "{1!s}".'.format(prop_name,
                                                            client_type))
   for prop_name in VALID_CLIENT[client_type]['string']:
     if client_info[prop_name].startswith('[['):
       raise InvalidClientSecretsError(
-        'Property "%s" is not configured.' % prop_name)
+        'Property "{0!s}" is not configured.'.format(prop_name))
   return client_type, client_info
 
 
@@ -104,7 +104,7 @@ def _loadfile(filename):
     finally:
       fp.close()
   except IOError:
-    raise InvalidClientSecretsError('File not found: "%s"' % filename)
+    raise InvalidClientSecretsError('File not found: "{0!s}"'.format(filename))
   return _validate_clientsecrets(obj)
 
 

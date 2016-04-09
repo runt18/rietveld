@@ -398,7 +398,7 @@ class StorageByKeyName(Storage):
       elif issubclass(self._model, db.Model):
         return False
 
-    raise TypeError('Model class not an NDB or DB model: %s.' % (self._model,))
+    raise TypeError('Model class not an NDB or DB model: {0!s}.'.format(self._model))
 
   def _get_entity(self):
     """Retrieve entity from datastore.
@@ -780,7 +780,7 @@ class OAuth2Decorator(object):
         if error:
           errormsg = self.request.get('error_description', error)
           self.response.out.write(
-              'The authorization request failed: %s' % _safe_html(errormsg))
+              'The authorization request failed: {0!s}'.format(_safe_html(errormsg)))
         else:
           user = users.get_current_user()
           decorator._create_flow(self)

@@ -174,7 +174,7 @@ class Issue(ndb.Model):
     """
     if user is None:
       return 0
-    assert isinstance(user, User), 'Expected User, got %r instead.' % user
+    assert isinstance(user, User), 'Expected User, got {0!r} instead.'.format(user)
     if self._num_drafts is None:
       if self.draft_count_by_user is None:
         self.calculate_draft_count_by_user()
@@ -309,7 +309,7 @@ class Issue(ndb.Model):
       self.calculate_updates_for()
     if self._original_subject is not None:
       return self._original_subject
-    return '%s (issue %d by %s)' % (self.subject, self.key.id(), self.owner.email())
+    return '{0!s} (issue {1:d} by {2!s})'.format(self.subject, self.key.id(), self.owner.email())
 
   def get_patchset_info(self, user, patchset_id):
     """Returns a list of patchsets for the issue, and calculates/caches data
@@ -849,7 +849,7 @@ class Patch(ndb.Model):
     try:
       base = db.Link(issue.base)
     except db.BadValueError:
-      msg = 'Invalid base URL for fetching: %s' % issue.base
+      msg = 'Invalid base URL for fetching: {0!s}'.format(issue.base)
       logging.warn(msg)
       raise FetchError(msg)
 
@@ -858,11 +858,11 @@ class Patch(ndb.Model):
     try:
       result = urlfetch.fetch(url, validate_certificate=True)
     except urlfetch.Error, err:
-      msg = 'Error fetching %s: %s: %s' % (url, err.__class__.__name__, err)
+      msg = 'Error fetching {0!s}: {1!s}: {2!s}'.format(url, err.__class__.__name__, err)
       logging.warn('FetchBase: %s', msg)
       raise FetchError(msg)
     if result.status_code != 200:
-      msg = 'Error fetching %s: HTTP status %s' % (url, result.status_code)
+      msg = 'Error fetching {0!s}: HTTP status {1!s}'.format(url, result.status_code)
       logging.warn('FetchBase: %s', msg)
       raise FetchError(msg)
     return Content(text=utils.to_dbtext(utils.unify_linebreaks(result.content)),
@@ -1023,7 +1023,7 @@ class Account(ndb.Model):
 
   @classmethod
   def get_id_for_email(cls, email):
-    return '<%s>' % email
+    return '<{0!s}>'.format(email)
 
   @classmethod
   def get_account_for_user(cls, user):
@@ -1052,7 +1052,7 @@ class Account(ndb.Model):
     suffix = 0
     while nickname.lower() in existing_nicks:
       suffix += 1
-      nickname = '%s%d' % (name, suffix)
+      nickname = '{0!s}{1:d}'.format(name, suffix)
     return nickname
 
   @classmethod
@@ -1064,13 +1064,13 @@ class Account(ndb.Model):
   def get_account_for_email(cls, email):
     """Get the Account for an email address, or return None."""
     assert email
-    id_str = '<%s>' % email
+    id_str = '<{0!s}>'.format(email)
     return cls.get_by_id(id_str)
 
   @classmethod
   def get_accounts_for_emails(cls, emails):
     """Get the Accounts for each of a list of email addresses."""
-    keys = [ndb.Key(cls, '<%s>' % email) for email in emails]
+    keys = [ndb.Key(cls, '<{0!s}>'.format(email)) for email in emails]
     return ndb.get_multi(keys)
 
   @classmethod
@@ -1082,7 +1082,7 @@ class Account(ndb.Model):
       if cls.current_user_account and email == cls.current_user_account.email:
         results[email] = cls.current_user_account
       else:
-        keys.append(ndb.Key(cls,'<%s>' % email))
+        keys.append(ndb.Key(cls,'<{0!s}>'.format(email)))
     if keys:
       accounts = ndb.get_multi(keys)
       for account in accounts:
@@ -1221,7 +1221,7 @@ class Account(ndb.Model):
     current_user = auth_utils.get_current_user()
     if self.user.user_id() != current_user.user_id():
       # Mainly for Google Account plus conversion.
-      logging.info('Updating user_id for %s from %s to %s' % (
+      logging.info('Updating user_id for {0!s} from {1!s} to {2!s}'.format(
         self.user.email(), self.user.user_id(), current_user.user_id()))
       self.user = current_user
       self.put()
@@ -1537,7 +1537,7 @@ def quarter_to_months(when):
   prefix = quarter.group(1)
   # Convert the quarter into 3 months group.
   base = (int(quarter.group(2)) - 1) * 4 + 1
-  return ['%s%02d' % (prefix, i) for i in range(base, base+3)]
+  return ['{0!s}{1:02d}'.format(prefix, i) for i in range(base, base+3)]
 
 
 def verify_account_statistics_name(name):

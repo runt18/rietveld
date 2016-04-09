@@ -136,19 +136,19 @@ class AccountInput(forms.TextInput):
         data['multiple'] = 'false'
       output += mark_safe(u'''
       <script type="text/javascript">
-          jQuery("#id_%(name)s").autocomplete("%(url)s", {
+          jQuery("#id_{name!s}").autocomplete("{url!s}", {{
           max: 10,
           highlight: false,
-          multiple: %(multiple)s,
+          multiple: {multiple!s},
           multipleSeparator: ", ",
           scroll: true,
           scrollHeight: 300,
           matchContains: true,
-          formatResult : function(row) {
+          formatResult : function(row) {{
           return row[0].replace(/ .+/gi, '');
-          }
-          });
-      </script>''' % data)
+          }}
+          }});
+      </script>'''.format(**data))
     return output
 
 
@@ -335,7 +335,7 @@ class BlockForm(forms.Form):
       help_text='Should this user be blocked')
 
 
-FORM_CONTEXT_VALUES = [(z, '%d lines' % z) for z in models.CONTEXT_CHOICES]
+FORM_CONTEXT_VALUES = [(z, '{0:d} lines'.format(z)) for z in models.CONTEXT_CHOICES]
 FORM_CONTEXT_VALUES.append(('', 'Whole file'))
 
 
@@ -606,13 +606,13 @@ def _url(path, **kwargs):
     encoded_parameters = urllib.urlencode(kwargs)
     if path.endswith('?'):
       # Trailing ? on path.  Append parameters to end.
-      return '%s%s' % (path, encoded_parameters)
+      return '{0!s}{1!s}'.format(path, encoded_parameters)
     elif '?' in path:
       # Append additional parameters to existing query parameters.
-      return '%s&%s' % (path, encoded_parameters)
+      return '{0!s}&{1!s}'.format(path, encoded_parameters)
     else:
       # Add query parameters to path with no query parameters.
-      return '%s?%s' % (path, encoded_parameters)
+      return '{0!s}?{1!s}'.format(path, encoded_parameters)
   else:
     return path
 
@@ -1009,18 +1009,17 @@ def upload(request):
       action = 'updated'
       issue = models.Issue.get_by_id(issue_id)
       if issue is None:
-        form.errors['issue'] = ['No issue exists with that id (%s)' %
-                                issue_id]
+        form.errors['issue'] = ['No issue exists with that id ({0!s})'.format(
+                                issue_id)]
       elif not form.cleaned_data.get('content_upload'):
         form.errors['issue'] = ['Base files upload required for that issue.']
         issue = None
       else:
         if not issue.edit_allowed:
-          form.errors['user'] = ['You (%s) don\'t own this issue (%s)' %
-                                 (request.user, issue_id)]
+          form.errors['user'] = ['You ({0!s}) don\'t own this issue ({1!s})'.format(request.user, issue_id)]
           issue = None
         elif issue.closed:
-          form.errors['issue'] = ['This issue is closed (%s)' % (issue_id)]
+          form.errors['issue'] = ['This issue is closed ({0!s})'.format((issue_id))]
           issue = None
         else:
           patchset = _add_patchset_from_form(request, issue, form, 'subject',
@@ -1031,16 +1030,15 @@ def upload(request):
       action = 'created'
       issue, patchset = _make_new(request, form)
   if issue is None:
-    msg = 'Issue creation errors: %s' % repr(form.errors)
+    msg = 'Issue creation errors: {0!s}'.format(repr(form.errors))
   else:
-    msg = ('Issue %s. URL: %s' %
-           (action,
+    msg = ('Issue {0!s}. URL: {1!s}'.format(action,
             request.build_absolute_uri(
               reverse('show_bare_issue_number', args=[issue.key.id()]))))
     if (form.cleaned_data.get('content_upload') or
         form.cleaned_data.get('separate_patches')):
       # Extend the response message: 2nd line is patchset id.
-      msg +="\n%d" % patchset.key.id()
+      msg +="\n{0:d}".format(patchset.key.id())
       if form.cleaned_data.get('content_upload'):
         # Extend the response: additional lines are the expected filenames.
         issue.put()
@@ -1087,7 +1085,7 @@ def upload(request):
             # patch id in case it's a binary file and the new content needs to
             # be uploaded.  We mark this by prepending 'nobase' to the id.
             id_string = "nobase_" + str(id_string)
-          msg += "\n%s %s" % (id_string, patch.filename)
+          msg += "\n{0!s} {1!s}".format(id_string, patch.filename)
 
         logging.info('upload response is:\n %s\n', msg)
         ndb.put_multi(patches)
@@ -1119,15 +1117,14 @@ def upload_content(request):
   form = UploadContentForm(request.POST, request.FILES)
   if not form.is_valid():
     return HttpTextResponse(
-        'ERROR: Upload content errors:\n%s' % repr(form.errors))
+        'ERROR: Upload content errors:\n{0!s}'.format(repr(form.errors)))
   if request.user is None:
     if IS_DEV:
       request.user = users.User(request.POST.get('user', 'test@example.com'))
     else:
       return HttpTextResponse('Error: Login required', status=401)
   if not request.issue.edit_allowed:
-    return HttpTextResponse('ERROR: You (%s) don\'t own this issue (%s).' %
-                            (request.user, request.issue.key.id()))
+    return HttpTextResponse('ERROR: You ({0!s}) don\'t own this issue ({1!s}).'.format(request.user, request.issue.key.id()))
   patch = request.patch
 
   if form.cleaned_data['is_current']:
@@ -1184,12 +1181,11 @@ def upload_patch(request):
       return HttpTextResponse('Error: Login required', status=401)
   if not request.issue.edit_allowed:
     return HttpTextResponse(
-        'ERROR: You (%s) don\'t own this issue (%s).' %
-        (request.user, request.issue.key.id()))
+        'ERROR: You ({0!s}) don\'t own this issue ({1!s}).'.format(request.user, request.issue.key.id()))
   form = UploadPatchForm(request.POST, request.FILES)
   if not form.is_valid():
     return HttpTextResponse(
-        'ERROR: Upload patch errors:\n%s' % repr(form.errors))
+        'ERROR: Upload patch errors:\n{0!s}'.format(repr(form.errors)))
   patchset = request.patchset
   if patchset.data:
     return HttpTextResponse(
@@ -1221,7 +1217,7 @@ def upload_complete(request, patchset_id=None):
                                          parent=request.issue.key)
     if patchset is None:
       return HttpTextResponse(
-          'No patch set exists with that id (%s)' % patchset_id, status=403)
+          'No patch set exists with that id ({0!s})'.format(patchset_id), status=403)
     # Add delta calculation task.
     # TODO(jrobbins): If this task has transient failures, consider using cron.
     taskqueue.add(url=reverse(task_calculate_delta),
@@ -1374,7 +1370,7 @@ def _get_data_url(form):
       form.errors['url'] = [str(err)]
       return None
     if fetch_result.status_code != 200:
-      form.errors['url'] = ['HTTP status code %s' % fetch_result.status_code]
+      form.errors['url'] = ['HTTP status code {0!s}'.format(fetch_result.status_code)]
       return None
     data = db.Blob(utils.unify_linebreaks(fetch_result.content))
 
@@ -1455,14 +1451,14 @@ def _get_emails_from_raw(raw_emails, form=None, label=None):
         if '@' not in email:
           account = models.Account.get_account_for_nickname(email)
           if account is None:
-            raise db.BadValueError('Unknown user: %s' % email)
+            raise db.BadValueError('Unknown user: {0!s}'.format(email))
           db_email = account.user.email().lower()
         elif email.count('@') != 1:
-          raise db.BadValueError('Invalid email address: %s' % email)
+          raise db.BadValueError('Invalid email address: {0!s}'.format(email))
         else:
           _, tail = email.split('@')
           if '.' not in tail:
-            raise db.BadValueError('Invalid email address: %s' % email)
+            raise db.BadValueError('Invalid email address: {0!s}'.format(email))
           db_email = email.lower()
       except db.BadValueError as err:
         if form:
@@ -1544,7 +1540,7 @@ def account(request):
       if len(added) >= limit:
         break
       added.add(account.key)
-      response += '%s (%s)\n' % (account.email, account.nickname)
+      response += '{0!s} ({1!s})\n'.format(account.email, account.nickname)
     return added, response
 
   added = set()
@@ -1720,7 +1716,7 @@ def download(request):
   """/download/<issue>_<patchset>.diff - Download a patch set."""
   if request.patchset.data is None:
     return HttpTextResponse(
-        'Patch set (%s) is too large.' % request.patchset.key.id(),
+        'Patch set ({0!s}) is too large.'.format(request.patchset.key.id()),
         status=404)
   padding = ''
   user_agent = request.META.get('HTTP_USER_AGENT')
@@ -1766,13 +1762,11 @@ def tarball(request):
       try:
         add_entry('a/', patch.get_content())  # before
       except FetchError:  # I/O problem?
-        logging.exception('tarball: patch(%s, %s).get_content failed' %
-                          (patch.key.id(), patch.filename))
+        logging.exception('tarball: patch({0!s}, {1!s}).get_content failed'.format(patch.key.id(), patch.filename))
     try:
       add_entry('b/', patch.get_patched_content())  # after
     except FetchError:  # file deletion?  I/O problem?
-      logging.exception('tarball: patch(%s, %s).get_patched_content failed' %
-                        (patch.key.id(), patch.filename))
+      logging.exception('tarball: patch({0!s}, {1!s}).get_patched_content failed'.format(patch.key.id(), patch.filename))
 
   tar.close()
   temp.flush()
@@ -1780,7 +1774,7 @@ def tarball(request):
   wrapper = FileWrapper(temp)
   response = HttpResponse(wrapper, mimetype='application/x-gtar')
   response['Content-Disposition'] = (
-      'attachment; filename=patch%s_%s.tar.bz2' % (request.issue.key.id(),
+      'attachment; filename=patch{0!s}_{1!s}.tar.bz2'.format(request.issue.key.id(),
                                                    request.patchset.key.id()))
   response['Content-Length'] = temp.tell()
   temp.seek(0)
@@ -1888,7 +1882,7 @@ def image(request):
   response = HttpResponse(request.content.data, content_type=request.mime_type)
   filename = re.sub(
       r'[^\w\.]', '_', request.patch.filename.encode('ascii', 'replace'))
-  response['Content-Disposition'] = 'attachment; filename="%s"' % filename
+  response['Content-Disposition'] = 'attachment; filename="{0!s}"'.format(filename)
   response['Cache-Control'] = 'no-cache, no-store'
   return response
 
@@ -2137,7 +2131,7 @@ def diff_skipped_lines(request, id_before, id_after, where, column_width):
   try:
     rows = _get_diff_table_rows(request, patch, None, column_width)
   except FetchError as err:
-    return HttpTextResponse('Error: %s; please report!' % err, status=500)
+    return HttpTextResponse('Error: {0!s}; please report!'.format(err), status=500)
   return _get_skipped_lines_response(rows, id_before, id_after, where, context)
 
 
@@ -2189,7 +2183,7 @@ def _get_skipped_lines_response(rows, id_before, id_after, where, context):
   # Create a usable structure for the JS part
   response = []
   response_rows =  [_strip_invalid_xml(r) for r in response_rows]
-  dom = ElementTree.parse(StringIO('<div>%s</div>' % "".join(response_rows)))
+  dom = ElementTree.parse(StringIO('<div>{0!s}</div>'.format("".join(response_rows))))
   for node in dom.getroot().getchildren():
     content = [[x.items(), x.text] for x in node.getchildren()]
     response.append([node.items(), content])
@@ -2202,13 +2196,13 @@ def _get_diff2_data(request, ps_left_id, ps_right_id, patch_id, context,
   ps_left = models.PatchSet.get_by_id(int(ps_left_id), parent=request.issue.key)
   if ps_left is None:
     return HttpTextResponse(
-        'No patch set exists with that id (%s)' % ps_left_id, status=404)
+        'No patch set exists with that id ({0!s})'.format(ps_left_id), status=404)
   ps_left.issue_key = request.issue.key
   ps_right = models.PatchSet.get_by_id(
     int(ps_right_id), parent=request.issue.key)
   if ps_right is None:
     return HttpTextResponse(
-        'No patch set exists with that id (%s)' % ps_right_id, status=404)
+        'No patch set exists with that id ({0!s})'.format(ps_right_id), status=404)
   ps_right.issue_key = request.issue.key
   if patch_id is not None:
     patch_right = models.Patch.get_by_id(int(patch_id), parent=ps_right.key)
@@ -2534,8 +2528,8 @@ def inline_draft(request):
     # Return HttpResponse for now because the JS part expects
     # a 200 status code.
     return HttpHtmlResponse(
-        '<font color="red">Error: %s; please report!</font>' %
-        err.__class__.__name__)
+        '<font color="red">Error: {0!s}; please report!</font>'.format(
+        err.__class__.__name__))
 
 
 def _inline_draft(request):
@@ -2854,7 +2848,7 @@ def _get_draft_details(request, comments):
         reverse(diff, args=[request.issue.key.id(),
                             patch.patchset_key.id(),
                             patch.filename]))
-      output.append('\n%s\nFile %s (%s):' % (url, patch.filename,
+      output.append('\n{0!s}\nFile {1!s} ({2!s}):'.format(url, patch.filename,
                                              c.left and "left" or "right"))
       last_key = (patch.key, c.left)
       if patch.no_base_file:
@@ -2874,12 +2868,12 @@ def _get_draft_details(request, comments):
           fetch_base_failed = True
     context = linecache[last_key].get(c.lineno, '').strip()
     url = request.build_absolute_uri(
-      '%s#%scode%d' % (reverse(diff, args=[request.issue.key.id(),
+      '{0!s}#{1!s}code{2:d}'.format(reverse(diff, args=[request.issue.key.id(),
                                            patch.patchset_key.id(),
                                            patch.filename]),
                        c.left and "old" or "new",
                        c.lineno))
-    output.append('\n%s\n%s:%d: %s\n%s' % (url, patch.filename, c.lineno,
+    output.append('\n{0!s}\n{1!s}:{2:d}: {3!s}\n{4!s}'.format(url, patch.filename, c.lineno,
                                            context, c.text.rstrip()))
   if modified_patches:
     ndb.put_multi(modified_patches)
@@ -2971,7 +2965,7 @@ def _make_message(request, issue, message, comments=None, send_mail=False,
     if 'files' in context and len(context['files']) > 210:
       num_trimmed = len(context['files']) - 200
       del context['files'][200:]
-      context['files'].append('[[ %d additional files ]]' % num_trimmed)
+      context['files'].append('[[ {0:d} additional files ]]'.format(num_trimmed))
     url = request.build_absolute_uri(reverse(show, args=[issue.key.id()]))
     reviewer_nicknames = ', '.join(library.get_nickname(rev_temp, True,
                                                         request)
@@ -2996,7 +2990,7 @@ def _make_message(request, issue, message, comments=None, send_mail=False,
         try:
           encoding.force_unicode(value)
         except UnicodeDecodeError:
-          logging.error('Key %s is not valid unicode. value: %r' % (key, value))
+          logging.error('Key {0!s} is not valid unicode. value: {1!r}'.format(key, value))
           # The content failed to be decoded as utf-8. Enforce it as ASCII.
           context[key] = value.decode('ascii', 'replace')
     body = django.template.loader.render_to_string(
@@ -3010,7 +3004,7 @@ def _make_message(request, issue, message, comments=None, send_mail=False,
     if cc:
       send_args['cc'] = [_encode_safely(address) for address in cc]
     if patch:
-      send_args['attachments'] = [('issue_%s_patch.diff' % issue.key.id(),
+      send_args['attachments'] = [('issue_{0!s}_patch.diff'.format(issue.key.id()),
                                    patch)]
 
     attempts = 0
@@ -3157,7 +3151,7 @@ def search(request):
     form = SearchForm(request.POST)
     if not form.is_valid():
       return HttpTextResponse('Invalid arguments', status=400)
-  logging.info('%s' % form.cleaned_data)
+  logging.info('{0!s}'.format(form.cleaned_data))
   keys_only = form.cleaned_data['keys_only'] or False
   requested_format = form.cleaned_data['format'] or 'html'
   limit = form.cleaned_data['limit']
@@ -3527,7 +3521,7 @@ def task_migrate_entities(request):
     logging.warning('Missing parameters')
     return HttpResponse()
   if kind not in ('Issue', 'Repository', 'Branch'):
-    logging.warning('Invalid kind: %s' % kind)
+    logging.warning('Invalid kind: {0!s}'.format(kind))
     return HttpResponse()
   old_account = ndb.Key(models.Account, old).get()
   new_account = ndb.Key(models.Account, new).get()
@@ -3566,8 +3560,8 @@ def user_popup(request):
     logging.exception('Exception in user_popup processing:')
     # Return HttpResponse because the JS part expects a 200 status code.
     return HttpHtmlResponse(
-        '<font color="red">Error: %s; please report!</font>' %
-        err.__class__.__name__)
+        '<font color="red">Error: {0!s}; please report!</font>'.format(
+        err.__class__.__name__))
 
 
 def _user_popup(request):
@@ -3631,7 +3625,7 @@ def _process_incoming_mail(raw_message, recipients):
   issue_id = int(match.groupdict()['id'])
   issue = models.Issue.get_by_id(issue_id)
   if issue is None:
-    raise InvalidIncomingEmailError('Unknown issue ID: %d' % issue_id)
+    raise InvalidIncomingEmailError('Unknown issue ID: {0:d}'.format(issue_id))
   sender = email.utils.parseaddr(incoming_msg.sender)[1]
 
   body = None
@@ -3733,7 +3727,7 @@ def customized_upload_py(request):
     if request.is_secure():
       review_server = 'https://' + review_server
     source = source.replace('DEFAULT_REVIEW_SERVER = "codereview.appspot.com"',
-                            'DEFAULT_REVIEW_SERVER = "%s"' % review_server)
+                            'DEFAULT_REVIEW_SERVER = "{0!s}"'.format(review_server))
 
   return HttpResponse(source, content_type='text/x-python; charset=utf-8')
 
@@ -3754,10 +3748,10 @@ def task_calculate_delta(request):
   try:
     patchset = ndb.Key(urlsafe=ps_key).get()
   except (db.KindError, db.BadKeyError) as err:
-    logging.error('Invalid PatchSet key %r: %s' % (ps_key, err))
+    logging.error('Invalid PatchSet key {0!r}: {1!s}'.format(ps_key, err))
     return HttpResponse()
   if patchset is None:  # e.g. PatchSet was deleted inbetween
-    logging.error('Missing PatchSet key %r' % ps_key)
+    logging.error('Missing PatchSet key {0!r}'.format(ps_key))
     return HttpResponse()
   patchset.calculate_deltas()
   return HttpResponse()
@@ -3856,7 +3850,7 @@ def get_access_token(request):
 
   port_value = _validate_port(request.GET.get('port'))
   if port_value is None:
-    return HttpTextResponse('Access Token: %s' % (credentials.access_token,))
+    return HttpTextResponse('Access Token: {0!s}'.format(credentials.access_token))
 
   # Send access token along to localhost client
   redirect_template_args = {'port': port_value}
@@ -3882,7 +3876,7 @@ def oauth2callback(request):
   if error:
     error_msg = request.GET.get('error_description', error)
     return HttpTextResponse(
-        'The authorization request failed: %s' % _safe_html(error_msg))
+        'The authorization request failed: {0!s}'.format(_safe_html(error_msg)))
   else:
     user = request.user
     flow = _create_flow(request)
@@ -3928,7 +3922,7 @@ def update_stats(request):
   """
   if IS_DEV:
     # Sadly, there is no way to know the admin port.
-    dashboard = 'http://%s:8000/taskqueue' % os.environ['SERVER_NAME']
+    dashboard = 'http://{0!s}:8000/taskqueue'.format(os.environ['SERVER_NAME'])
   else:
     # Do not use app_identity.get_application_id() since we need the 's~'.
     appid = os.environ['APPLICATION_ID']
@@ -3967,7 +3961,7 @@ def update_stats(request):
         url=reverse(task_refresh_all_stats_score),
         params={'destroy': str(int(tasks_to_trigger[0] == 'destroy'))},
         queue_name='refresh-all-stats-score')
-    msg = 'Triggered %s.' % tasks_to_trigger[0]
+    msg = 'Triggered {0!s}.'.format(tasks_to_trigger[0])
   else:
     tasks = []
     for task in tasks_to_trigger:
@@ -3982,7 +3976,7 @@ def update_stats(request):
           year, month = map(int, task.split('-'))
           days = calendar.monthrange(year, month)[1]
           tasks.extend(
-              '%s-%02d' % (task, d + 1) for d in range(days)
+              '{0!s}-{1:02d}'.format(task, d + 1) for d in range(days)
               if datetime.date(year, month, d + 1) < today)
       else:
         msg = 'Invalid item.'
@@ -3995,7 +3989,7 @@ def update_stats(request):
             url=reverse(task_update_stats),
             params={'tasks': json.dumps(tasks), 'date': str(today)},
             queue_name='update-stats')
-        msg = 'Triggered the following tasks: %s.' % ', '.join(tasks)
+        msg = 'Triggered the following tasks: {0!s}.'.format(', '.join(tasks))
   logging.info(msg)
   return respond(
       request,
@@ -4022,7 +4016,7 @@ def cron_update_yesterday_stats(_request):
       url=reverse(task_update_stats),
       params={'tasks': json.dumps(tasks), 'date': str(today)},
       queue_name='update-stats')
-  out = 'Triggered tasks for day %s: %s' % (day, ', '.join(tasks))
+  out = 'Triggered tasks for day {0!s}: {1!s}'.format(day, ', '.join(tasks))
   logging.info(out)
   return HttpTextResponse(out)
 
@@ -4341,7 +4335,7 @@ def task_update_stats(request):
           - datetime.timedelta(days=1)).date()
       out, cursor = update_rolling_stats(cursor, yesterday)
     else:
-      msg = 'Unknown task %s, ignoring.' % task
+      msg = 'Unknown task {0!s}, ignoring.'.format(task)
       cursor = ''
       logging.error(msg)
       out = HttpTextResponse(msg)
@@ -4571,7 +4565,7 @@ def update_rolling_stats(cursor, reference_day):
   except (db.Timeout, DeadlineExceededError):
     result = 500
 
-  out = '%s\nLooked up %d accounts\nStored %d items\nDeleted %d\nIn %.1fs\n' % (
+  out = '{0!s}\nLooked up {1:d} accounts\nStored {2:d} items\nDeleted {3:d}\nIn {4:.1f}s\n'.format(
       reference_day, accounts, total, total_deleted, time.time() - start)
   if result == 200:
     logging.info(out)
@@ -4616,7 +4610,7 @@ def update_monthly_stats(cursor, day_to_process):
       for key in day_stats_keys:
         month_name = key.id().rsplit('-', 1)[0]
         account_name = key.parent().id()
-        lookup_key = '%s-%s' % (month_name, account_name)
+        lookup_key = '{0!s}-{1!s}'.format(month_name, account_name)
         if not lookup_key in months_to_regenerate:
           batch.append((month_name, account_name))
         months_to_regenerate.add(lookup_key)
@@ -4641,7 +4635,7 @@ def update_monthly_stats(cursor, day_to_process):
 
         days_in_month = calendar.monthrange(*map(int, month_name.split('-')))[1]
         days_name = [
-          month_name + '-%02d' % (i + 1) for i in range(days_in_month)
+          month_name + '-{0:02d}'.format((i + 1)) for i in range(days_in_month)
         ]
         days_keys = [
           ndb.Key(models.AccountStatsDay, d, parent=account_key)
@@ -4668,7 +4662,7 @@ def update_monthly_stats(cursor, day_to_process):
     logging.error(str(e))
     result = 500
 
-  out = '%s\nStored %d items\nSkipped %d\nIn %.1fs\n' % (
+  out = '{0!s}\nStored {1:d} items\nSkipped {2:d}\nIn {3:.1f}s\n'.format(
       day_to_process.date(), total, skipped, time.time() - start)
   if result == 200:
     logging.info(out)
@@ -4751,7 +4745,7 @@ def task_refresh_all_stats_score(request):
     result = 200
   except (db.Timeout, DeadlineExceededError):
     result = 500
-  out = 'Index: %d\nType = %s\nStored %d items\nSkipped %d\nIn %.1fs\n' % (
+  out = 'Index: {0:d}\nType = {1!s}\nStored {2:d} items\nSkipped {3:d}\nIn {4:.1f}s\n'.format(
       task_count, cls.__name__, updated, skipped, time.time() - start)
   if result == 200:
     logging.info(out)
@@ -4767,9 +4761,9 @@ def quarter_to_months(when):
     # Select the whole year.
     year = int(when)
     if year == today.year:
-      out = ['%04d-%02d' % (year, i + 1) for i in range(today.month)]
+      out = ['{0:04d}-{1:02d}'.format(year, i + 1) for i in range(today.month)]
     else:
-      out = ['%04d-%02d' % (year, i + 1) for i in range(12)]
+      out = ['{0:04d}-{1:02d}'.format(year, i + 1) for i in range(12)]
   else:
     quarter = re.match(r'^(\d\d\d\d-)[qQ]([1-4])$', when)
     if not quarter:
@@ -4777,9 +4771,9 @@ def quarter_to_months(when):
     prefix = quarter.group(1)
     # Convert the quarter into 3 months group.
     base = (int(quarter.group(2)) - 1) * 3 + 1
-    out = ['%s%02d' % (prefix, i) for i in range(base, base+3)]
+    out = ['{0!s}{1:02d}'.format(prefix, i) for i in range(base, base+3)]
 
-  logging.info('Expanded to %s' % ', '.join(out))
+  logging.info('Expanded to {0!s}'.format(', '.join(out)))
   return out
 
 

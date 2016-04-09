@@ -117,7 +117,7 @@ def positional(max_positional_args):
         plural_s = ''
         if max_positional_args != 1:
           plural_s = 's'
-        message = '%s() takes at most %d positional argument%s (%d given)' % (
+        message = '{0!s}() takes at most {1:d} positional argument{2!s} ({3:d} given)'.format(
             wrapped.__name__, max_positional_args, plural_s, len(args))
         if FLAGS.positional_parameters_enforcement == 'EXCEPTION':
           raise TypeError(message)

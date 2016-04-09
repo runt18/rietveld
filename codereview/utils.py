@@ -38,9 +38,9 @@ def make_url(base, filename, rev):
     if rev is None:
       raise FetchError("Can't access googlecode.com without a revision")
     if not path.startswith("/svn/"):
-      raise FetchError( "Malformed googlecode.com URL (%s)" % base)
+      raise FetchError( "Malformed googlecode.com URL ({0!s})".format(base))
     path = path[5:]  # Strip "/svn/"
-    url = "%s://%s/svn-history/r%d/%s/%s" % (scheme, netloc, rev,
+    url = "{0!s}://{1!s}/svn-history/r{2:d}/{3!s}/{4!s}".format(scheme, netloc, rev,
                                              path, filename)
     return url
   elif netloc.endswith("sourceforge.net") and rev is not None:
@@ -49,7 +49,7 @@ def make_url(base, filename, rev):
     else:
       path = path.strip()
     splitted_path = path.split("/")
-    url = "%s://%s/%s/!svn/bc/%d/%s/%s" % (scheme, netloc,
+    url = "{0!s}://{1!s}/{2!s}/!svn/bc/{3:d}/{4!s}/{5!s}".format(scheme, netloc,
                                            "/".join(splitted_path[1:3]), rev,
                                            "/".join(splitted_path[3:]),
                                            filename)
@@ -60,7 +60,7 @@ def make_url(base, filename, rev):
     url += '/'
   url += filename
   if rev is not None:
-    url += '?rev=%s' % rev
+    url += '?rev={0!s}'.format(rev)
   return url
 
 

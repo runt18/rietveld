@@ -35,7 +35,7 @@ class BaseFeed(Feed):
     return 'rietveld'
 
   def item_guid(self, item):
-    return 'urn:md5:%s' % (md5.new(str(item.key)).hexdigest())
+    return 'urn:md5:{0!s}'.format((md5.new(str(item.key)).hexdigest()))
 
   def item_link(self, item):
     if isinstance(item, models.PatchSet):
@@ -46,7 +46,7 @@ class BaseFeed(Feed):
         # Patch set is too large, only the splitted diffs are available.
         return reverse('codereview.views.show', args=[item.key.parent().id()])
     if isinstance(item, models.Message):
-      return '%s#msg-%s' % (reverse('codereview.views.show',
+      return '{0!s}#msg-{1!s}'.format(reverse('codereview.views.show',
                                     args=[item.issue_key.id()]),
                             item.key.id())
     return reverse('codereview.views.show', args=[item.key.id()])
@@ -88,7 +88,7 @@ class BaseUserFeed(BaseFeed):
     if len(bits) != 1:
       raise ObjectDoesNotExist
     obj = bits[0]
-    account = models.Account.get_account_for_nickname('%s' % obj)
+    account = models.Account.get_account_for_nickname('{0!s}'.format(obj))
     if account is None:
       raise ObjectDoesNotExist
     return account
@@ -153,7 +153,7 @@ class OneIssueFeed(BaseFeed):
     raise ObjectDoesNotExist
 
   def title(self, obj):
-    return 'Code review - Issue %d: %s' % (obj.key.id(), obj.subject)
+    return 'Code review - Issue {0:d}: {1!s}'.format(obj.key.id(), obj.subject)
 
   def items(self, obj):
     items = list(obj.patchsets) + list(obj.messages)

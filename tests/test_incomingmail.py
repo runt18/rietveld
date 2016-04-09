@@ -46,7 +46,7 @@ class TestIncomingMail(TestCase):
     msg = Message()
     msg['To'] = 'reply@example.com'
     msg['From'] = 'sender@example.com'
-    msg['Subject'] = 'subject (issue%s)' % self.issue.key.id()
+    msg['Subject'] = 'subject (issue{0!s})'.format(self.issue.key.id())
     msg.set_payload('body')
     response = self.client.post('/_ah/mail/reply@example.com',
                                 msg.as_string(), content_type='text/plain')
@@ -56,7 +56,7 @@ class TestIncomingMail(TestCase):
     msg = models.Message.query(ancestor=self.issue.key).get()
     self.assertEqual(msg.text, 'body')
     self.assertEqual(msg.subject,
-                     'subject (issue%s)' % self.issue.key.id())
+                     'subject (issue{0!s})'.format(self.issue.key.id()))
     self.assertEqual(msg.sender, 'sender@example.com')
     self.assertEqual(msg.recipients, ['reply@example.com'])
     self.assert_(msg.date is not None)
@@ -85,7 +85,7 @@ class TestIncomingMail(TestCase):
   def test_empty_message(self):
     msg = Message()
     msg['From'] = 'sender@example.com'
-    msg['Subject'] = 'subject (issue%s)\r\n\r\n' % self.issue.key.id()
+    msg['Subject'] = 'subject (issue{0!s})\r\n\r\n'.format(self.issue.key.id())
     self.assertRaises(views.InvalidIncomingEmailError,
                       views._process_incoming_mail, msg.as_string(),
                       'reply@example.com')
@@ -93,7 +93,7 @@ class TestIncomingMail(TestCase):
   def test_senders_becomes_reviewer(self):
     msg = Message()
     msg['From'] ='sender@example.com'
-    msg['Subject'] = 'subject (issue%s)' % self.issue.key.id()
+    msg['Subject'] = 'subject (issue{0!s})'.format(self.issue.key.id())
     msg.set_payload('body')
     views._process_incoming_mail(msg.as_string(), 'reply@example.com')
     issue = models.Issue.get_by_id(self.issue.key.id())  # re-fetch issue
@@ -110,7 +110,7 @@ class TestIncomingMail(TestCase):
   def test_long_subjects(self):
     # multi-line subjects should be collapsed into a single line
     msg = Message()
-    msg['Subject'] = ('foo '*30)+' (issue%s)' % self.issue.key.id()
+    msg['Subject'] = ('foo '*30)+' (issue{0!s})'.format(self.issue.key.id())
     msg['From'] = 'sender@example.com'
     msg.set_payload('body')
     views._process_incoming_mail(msg.as_string(), 'reply@example.com')
@@ -120,7 +120,7 @@ class TestIncomingMail(TestCase):
   def test_multipart(self):
     # Text first
     msg = MIMEMultipart('alternative')
-    msg['Subject'] = 'subject (issue%s)' % self.issue.key.id()
+    msg['Subject'] = 'subject (issue{0!s})'.format(self.issue.key.id())
     msg['From'] = 'sender@example.com'
     msg.attach(MIMEText('body', 'plain'))
     msg.attach(MIMEText('ignore', 'html'))
@@ -130,7 +130,7 @@ class TestIncomingMail(TestCase):
     imsg.key.delete()
     # HTML first
     msg = MIMEMultipart('alternative')
-    msg['Subject'] = 'subject (issue%s)' % self.issue.key.id()
+    msg['Subject'] = 'subject (issue{0!s})'.format(self.issue.key.id())
     msg['From'] = 'sender@example.com'
     msg.attach(MIMEText('ignore', 'html'))
     msg.attach(MIMEText('body', 'plain'))
@@ -140,7 +140,7 @@ class TestIncomingMail(TestCase):
     imsg.key.delete()
     # no text at all
     msg = MIMEMultipart('alternative')
-    msg['Subject'] = 'subject (issue%s)' % self.issue.key.id()
+    msg['Subject'] = 'subject (issue{0!s})'.format(self.issue.key.id())
     msg['From'] = 'sender@example.com'
     msg.attach(MIMEText('ignore', 'html'))
     self.assertRaises(views.InvalidIncomingEmailError,
@@ -149,7 +149,7 @@ class TestIncomingMail(TestCase):
 
   def test_mails_from_appengine(self):  # bounces
     msg = Message()
-    msg['Subject'] = 'subject (issue%s)' % self.issue.key.id()
+    msg['Subject'] = 'subject (issue{0!s})'.format(self.issue.key.id())
     msg['From'] = 'sender@example.com'
     msg['X-Google-Appengine-App-Id'] = 'foo'
     self.assertRaises(views.InvalidIncomingEmailError,
@@ -158,7 +158,7 @@ class TestIncomingMail(TestCase):
 
   def test_huge_body_is_truncated(self):  # see issue325
     msg = Message()
-    msg['subject'] = 'subject (issue%s)' % self.issue.key.id()
+    msg['subject'] = 'subject (issue{0!s})'.format(self.issue.key.id())
     msg['From'] = 'sender@example.com'
     msg.set_payload('1' * 600 * 1024)
     views._process_incoming_mail(msg.as_string(), 'reply@example.com')
@@ -173,7 +173,7 @@ class TestIncomingMail(TestCase):
     jcode = 'iso-2022-jp'
     msg = Message()
     msg.set_payload(jtxt, jcode)
-    msg['Subject'] = 'subject (issue%s)' % self.issue.key.id()
+    msg['Subject'] = 'subject (issue{0!s})'.format(self.issue.key.id())
     msg['From'] = 'sender@example.com'
     views._process_incoming_mail(msg.as_string(), 'reply@example.com')
     imsg = models.Message.query(ancestor=self.issue.key).get()
@@ -186,7 +186,7 @@ class TestIncomingMail(TestCase):
     jcode = 'iso-2022-jp'
     msg = Message()
     msg.set_payload(jtxt, jcode)
-    msg['Subject'] = 'subject (issue%s)' % self.issue.key.id()
+    msg['Subject'] = 'subject (issue{0!s})'.format(self.issue.key.id())
     msg['From'] = 'sender@example.com'
     del msg['Content-Transfer-Encoding']  # replace 7bit encoding
     msg['Content-Transfer-Encoding'] = '8bit'
@@ -199,7 +199,7 @@ class TestIncomingMail(TestCase):
     # charset are handled correctly.
     body = 'Âfoo'
     msg = ('From: sender@example.com',
-           'Subject: subject (issue%s)' % self.issue.key.id(),
+           'Subject: subject (issue{0!s})'.format(self.issue.key.id()),
            '',
            body)
     views._process_incoming_mail('\r\n'.join(msg), 'reply@example.com')
@@ -208,7 +208,7 @@ class TestIncomingMail(TestCase):
     imsg.key.delete()
     body = '\xf6'
     msg = ('From: sender@example.com',
-           'Subject: subject (issue%s)' % self.issue.key.id(),
+           'Subject: subject (issue{0!s})'.format(self.issue.key.id()),
            '',
            body)
     views._process_incoming_mail('\r\n'.join(msg), 'reply@example.com')

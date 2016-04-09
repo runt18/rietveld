@@ -33,7 +33,7 @@ class AddHSTSHeaderMiddleware(object):
   def process_response(self, request, response):
     if request.is_secure():
       response['Strict-Transport-Security'] = (
-          'max-age=%d' % settings.HSTS_MAX_AGE)
+          'max-age={0:d}'.format(settings.HSTS_MAX_AGE))
     return response
 
 
@@ -80,10 +80,10 @@ class PropagateExceptionMiddleware(object):
     else:
       msg = 'Unhandled exception.'
       status = 500
-    logging.exception('%s: ' % exception.__class__.__name__)
-    technical = '%s [%s]' % (exception, exception.__class__.__name__)
+    logging.exception('{0!s}: '.format(exception.__class__.__name__))
+    technical = '{0!s} [{1!s}]'.format(exception, exception.__class__.__name__)
     if self._text_requested(request):
-      content = '%s\n\n%s\n' % (msg, technical)
+      content = '{0!s}\n\n{1!s}\n'.format(msg, technical)
       content_type = 'text/plain'
     else:
       tpl = loader.get_template('exception.html')
@@ -102,4 +102,4 @@ class RedirectToHTTPSMiddleware(object):
     if not request.is_secure():
       host = request.get_host().split(':')[0]
       return HttpResponsePermanentRedirect(
-          'https://%s%s' % (host, request.get_full_path()))
+          'https://{0!s}{1!s}'.format(host, request.get_full_path()))

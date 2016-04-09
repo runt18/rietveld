@@ -209,8 +209,7 @@ def ParsePatchToChunks(lines, name="<patch>"):
     old_i, old_j = old_range
     new_i, new_j = new_range
     if len(old_chunk) != old_j - old_i or len(new_chunk) != new_j - new_i:
-      print >> sys.stderr, ("%s:%s: last chunk has incorrect length" %
-                            (name, lineno))
+      print >> sys.stderr, ("{0!s}:{1!s}: last chunk has incorrect length".format(name, lineno))
       return None
     chunks.append((old_range, new_range, old_chunk, new_chunk))
     raw_chunk = []

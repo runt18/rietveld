@@ -122,7 +122,7 @@ def show_reviewers(reviewer_list, arg=None):
 
 
 def format_approval_text(text, approval):
-  if approval == None:
+  if approval is None:
     return text
   if approval:
     return "<span class='approval'>" + text + "</span>"

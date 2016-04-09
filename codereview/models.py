@@ -657,7 +657,7 @@ class Patch(ndb.Model):
 
     The value is cached.
     """
-    if self._property_changes != None:
+    if self._property_changes is not None:
       return self._property_changes
     self._property_changes = []
     match = re.search('^Property changes on.*\n'+'_'*67+'$', self.text,
@@ -776,7 +776,7 @@ class Patch(ndb.Model):
           msg = 'Bad content. Try to upload again.'
           logging.warn('Patch.get_content: %s', msg)
           raise FetchError(msg)
-        if content.is_uploaded and content.text == None:
+        if content.is_uploaded and content.text is None:
           msg = 'Upload in progress.'
           logging.warn('Patch.get_content: %s', msg)
           raise FetchError(msg)

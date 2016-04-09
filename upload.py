@@ -1207,11 +1207,11 @@ class VersionControlSystem(object):
         base_content = None
         file_id_str = file_id_str[file_id_str.rfind("_") + 1:]
       file_id = int(file_id_str)
-      if base_content != None:
+      if base_content is not None:
         t = thread_pool.apply_async(UploadFile, args=(filename,
             file_id, base_content, is_binary, status, True))
         threads.append(t)
-      if new_content != None:
+      if new_content is not None:
         t = thread_pool.apply_async(UploadFile, args=(filename,
             file_id, new_content, is_binary, status, False))
         threads.append(t)
@@ -2297,7 +2297,7 @@ def GuessVCSName(options):
     detection routine, or None if there is nothing interesting.
   """
   for attribute, value in options.__dict__.iteritems():
-    if attribute.startswith("p4") and value != None:
+    if attribute.startswith("p4") and value is not None:
       return (VCS_PERFORCE, None)
 
   def RunDetectCommand(vcs_type, command):
@@ -2319,26 +2319,26 @@ def GuessVCSName(options):
   # Try running it, but don't die if we don't have hg installed.
   # NOTE: we try Mercurial first as it can sit on top of an SVN working copy.
   res = RunDetectCommand(VCS_MERCURIAL, ["hg", "root"])
-  if res != None:
+  if res is not None:
     return res
 
   # Subversion from 1.7 has a single centralized .svn folder
   # ( see http://subversion.apache.org/docs/release-notes/1.7.html#wc-ng )
   # That's why we use 'svn info' instead of checking for .svn dir
   res = RunDetectCommand(VCS_SUBVERSION, ["svn", "info"])
-  if res != None:
+  if res is not None:
     return res
 
   # Git has a command to test if you're in a git tree.
   # Try running it, but don't die if we don't have git installed.
   res = RunDetectCommand(VCS_GIT, ["git", "rev-parse",
                                    "--is-inside-work-tree"])
-  if res != None:
+  if res is not None:
     return res
 
   # detect CVS repos use `cvs status && $? == 0` rules
   res = RunDetectCommand(VCS_CVS, ["cvs", "status"])
-  if res != None:
+  if res is not None:
     return res
 
   return (VCS_UNKNOWN, None)

@@ -407,12 +407,11 @@ def RenderIntraLineDiff(blocks, line, tag, dbg_info=None, limit=80, indent=5,
   has_newline = False
   debug_info = dbg_info
   if dbg_info:
-    debug_info += "\nBlock Count: %d\nBlocks: " % (len(blocks) - 1)
+    debug_info += "\nBlock Count: {0:d}\nBlocks: ".format((len(blocks) - 1))
   for curr_start, curr_len in blocks:
     if dbg_info and curr_len > 0:
       debug_info += Break(
-          "\n(%d, %d):|%s|" %
-          (curr_start, curr_len, line[curr_start:curr_start+curr_len]),
+          "\n({0:d}, {1:d}):|{2!s}|".format(curr_start, curr_len, line[curr_start:curr_start+curr_len]),
            limit, indent, tabsize, mark_tabs)
     res += FoldBlock(line, prev_start + prev_len, curr_start, limit, indent,
                      tag, 'diff', tabsize, mark_tabs)
@@ -689,7 +688,7 @@ def RenderIntraRegionDiff(lines, diff_blocks, tag, ratio, limit=80, indent=5,
   result = []
   dbg_info = None
   if dbg:
-    dbg_info = 'Ratio: %.1f' % ratio
+    dbg_info = 'Ratio: {0:.1f}'.format(ratio)
   for line, blocks in zip(lines, diff_blocks):
     blocks = NormalizeBlocks(blocks, line)
     blocks = CompactBlocks(blocks)

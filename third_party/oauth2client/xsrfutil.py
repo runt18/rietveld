@@ -60,7 +60,7 @@ def generate_token(key, user_id, action_id="", when=None):
   digester.update(str(when))
   digest = digester.digest()
 
-  token = base64.urlsafe_b64encode('%s%s%d' % (digest,
+  token = base64.urlsafe_b64encode('{0!s}{1!s}{2:d}'.format(digest,
                                                DELIMITER,
                                                when))
   return token

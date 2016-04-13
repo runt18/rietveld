@@ -320,8 +320,8 @@ def verify_signed_jwt_with_certs(jwt, certs, audience):
 
   if (len(segments) != 3):
     raise AppIdentityError(
-      'Wrong number of segments in token: %s' % jwt)
-  signed = '%s.%s' % (segments[0], segments[1])
+      'Wrong number of segments in token: {0!s}'.format(jwt))
+  signed = '{0!s}.{1!s}'.format(segments[0], segments[1])
 
   signature = _urlsafe_b64decode(segments[2])
 
@@ -330,7 +330,7 @@ def verify_signed_jwt_with_certs(jwt, certs, audience):
   try:
     parsed = simplejson.loads(json_body)
   except:
-    raise AppIdentityError('Can\'t parse token: %s' % json_body)
+    raise AppIdentityError('Can\'t parse token: {0!s}'.format(json_body))
 
   # Check signature.
   verified = False
@@ -340,38 +340,35 @@ def verify_signed_jwt_with_certs(jwt, certs, audience):
       verified = True
       break
   if not verified:
-    raise AppIdentityError('Invalid token signature: %s' % jwt)
+    raise AppIdentityError('Invalid token signature: {0!s}'.format(jwt))
 
   # Check creation timestamp.
   iat = parsed.get('iat')
   if iat is None:
-    raise AppIdentityError('No iat field in token: %s' % json_body)
+    raise AppIdentityError('No iat field in token: {0!s}'.format(json_body))
   earliest = iat - CLOCK_SKEW_SECS
 
   # Check expiration timestamp.
   now = long(time.time())
   exp = parsed.get('exp')
   if exp is None:
-    raise AppIdentityError('No exp field in token: %s' % json_body)
+    raise AppIdentityError('No exp field in token: {0!s}'.format(json_body))
   if exp >= now + MAX_TOKEN_LIFETIME_SECS:
     raise AppIdentityError(
-      'exp field too far in future: %s' % json_body)
+      'exp field too far in future: {0!s}'.format(json_body))
   latest = exp + CLOCK_SKEW_SECS
 
   if now < earliest:
-    raise AppIdentityError('Token used too early, %d < %d: %s' %
-      (now, earliest, json_body))
+    raise AppIdentityError('Token used too early, {0:d} < {1:d}: {2!s}'.format(now, earliest, json_body))
   if now > latest:
-    raise AppIdentityError('Token used too late, %d > %d: %s' %
-      (now, latest, json_body))
+    raise AppIdentityError('Token used too late, {0:d} > {1:d}: {2!s}'.format(now, latest, json_body))
 
   # Check audience.
   if audience is not None:
     aud = parsed.get('aud')
     if aud is None:
-      raise AppIdentityError('No aud field in token: %s' % json_body)
+      raise AppIdentityError('No aud field in token: {0!s}'.format(json_body))
     if aud != audience:
-      raise AppIdentityError('Wrong recipient, %s != %s: %s' %
-          (aud, audience, json_body))
+      raise AppIdentityError('Wrong recipient, {0!s} != {1!s}: {2!s}'.format(aud, audience, json_body))
 
   return parsed

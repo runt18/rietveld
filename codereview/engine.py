@@ -378,7 +378,7 @@ def _TableRowGenerator(old_patch, old_dict, old_max, old_snapshot,
 
   for tag, old, new in triple_iterator:
     if tag.startswith('error'):
-      yield 'error', '<tr><td><h3>%s</h3></td></tr>\n' % cgi.escape(tag)
+      yield 'error', '<tr><td><h3>{0!s}</h3></td></tr>\n'.format(cgi.escape(tag))
       return
     old1 = old_offset
     old_offset = old2 = old1 + len(old)
@@ -403,7 +403,7 @@ def _TableRowGenerator(old_patch, old_dict, old_max, old_snapshot,
         frags.append('<tr name="hook"')
       else:
         frags.append('<tr')
-      frags.append(' id="pair-%d">' % row_count)
+      frags.append(' id="pair-{0:d}">'.format(row_count))
 
       old_intra_diff = ''
       new_intra_diff = ''
@@ -512,13 +512,13 @@ def _RenderDiffInternal(old_buff, new_buff, ndigits, tag, frag_list,
     if debug:
       frags.append('<tr>')
       if old_debug_info:
-        frags.append('<td class="debug-info">%s</td>' %
-                     old_debug_info.replace('\n', '<br>'))
+        frags.append('<td class="debug-info">{0!s}</td>'.format(
+                     old_debug_info.replace('\n', '<br>')))
       else:
         frags.append('<td></td>')
       if new_debug_info:
-        frags.append('<td class="debug-info">%s</td>' %
-                     new_debug_info.replace('\n', '<br>'))
+        frags.append('<td class="debug-info">{0!s}</td>'.format(
+                     new_debug_info.replace('\n', '<br>')))
       else:
         frags.append('<td></td>')
       frags.append('</tr>\n')
@@ -557,23 +557,23 @@ def _RenderDiffColumn(line_valid, tag, ndigits, lineno, begin, end,
     A rendered column.
   """
   if line_valid:
-    cls_attr = '%s%s' % (prefix, tag)
+    cls_attr = '{0!s}{1!s}'.format(prefix, tag)
     if tag == 'equal':
       lno = '%*d' % (ndigits, lineno)
     else:
       lno = _MarkupNumber(ndigits, lineno, 'u')
     if tag == 'replace':
-      col_content = ('%s%s %s%s' % (begin, lno, end, intra_diff))
+      col_content = ('{0!s}{1!s} {2!s}{3!s}'.format(begin, lno, end, intra_diff))
       # If IR diff has been turned off or there is no matching new line at
       # the end then switch to dark background CSS style.
       if not do_ir_diff or not has_newline:
         cls_attr = cls_attr + '1'
     else:
-      col_content = '%s %s' % (lno, intra_diff)
-    return '<td class="%s" id="%scode%d">%s</td>' % (cls_attr, prefix,
+      col_content = '{0!s} {1!s}'.format(lno, intra_diff)
+    return '<td class="{0!s}" id="{1!s}code{2:d}">{3!s}</td>'.format(cls_attr, prefix,
                                                      lineno, col_content)
   else:
-    return '<td class="%sblank"></td>' % prefix
+    return '<td class="{0!s}blank"></td>'.format(prefix)
 
 
 def _RenderInlineComments(line_valid, lineno, data, user,
@@ -585,7 +585,7 @@ def _RenderInlineComments(line_valid, lineno, data, user,
   """
   comments = []
   if line_valid:
-    comments.append('<td id="%s-line-%s">' % (prefix, lineno))
+    comments.append('<td id="{0!s}-line-{1!s}">'.format(prefix, lineno))
     if lineno in data:
       patchset = patch.patchset_key.get()
       issue = patchset.issue_key.get()
@@ -626,11 +626,11 @@ def RenderUnifiedTableRows(request, parsed_lines):
     # When a line is unchanged (i.e. both old_line_no and new_line_no aren't 0)
     # pick the old column line numbers when adding a comment.
     if old_line_no:
-      row1_id = 'id="oldcode%d"' % old_line_no
-      row2_id = 'id="old-line-%d"' % old_line_no
+      row1_id = 'id="oldcode{0:d}"'.format(old_line_no)
+      row2_id = 'id="old-line-{0:d}"'.format(old_line_no)
     elif new_line_no:
-      row1_id = 'id="newcode%d"' % new_line_no
-      row2_id = 'id="new-line-%d"' % new_line_no
+      row1_id = 'id="newcode{0:d}"'.format(new_line_no)
+      row2_id = 'id="new-line-{0:d}"'.format(new_line_no)
 
     if line_text[0] == '+':
       style = 'udiffadd'
@@ -639,8 +639,7 @@ def RenderUnifiedTableRows(request, parsed_lines):
     else:
       style = ''
 
-    rows.append('<tr><td class="udiff %s" %s>%s</td></tr>' %
-                (style, row1_id, cgi.escape(line_text)))
+    rows.append('<tr><td class="udiff {0!s}" {1!s}>{2!s}</td></tr>'.format(style, row1_id, cgi.escape(line_text)))
 
     frags = []
     if old_line_no in old_dict or new_line_no in new_dict:
@@ -699,7 +698,7 @@ def _MarkupNumber(ndigits, number, tag):
   """
   formatted_number = str(number)
   space_prefix = ' ' * (ndigits - len(formatted_number))
-  return '%s<%s>%s</%s>' % (space_prefix, tag, formatted_number, tag)
+  return '{0!s}<{1!s}>{2!s}</{3!s}>'.format(space_prefix, tag, formatted_number, tag)
 
 
 def _ExpandTemplate(name, request, **params):

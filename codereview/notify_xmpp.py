@@ -29,7 +29,7 @@ def get_chat_status(account):
     return 'online' if presence else 'offline'
   except Exception as err:
     logging.error('Exception getting XMPP presence: %s', err)
-    return 'Error (%s)' % err
+    return 'Error ({0!s})'.format(err)
 
 
 @deco.require_methods('POST')
@@ -43,7 +43,7 @@ def incoming_chat(request):
   try:
     msg = xmpp.Message(request.POST)
   except xmpp.InvalidMessageError, err:
-    logging.warn('Incoming invalid chat message: %s' % err)
+    logging.warn('Incoming invalid chat message: {0!s}'.format(err))
     return HttpTextResponse('')
   sts = msg.reply('Sorry, Rietveld does not support chat input')
   logging.debug('XMPP status %r', sts)
@@ -97,7 +97,7 @@ def notify_issue(request, issue, message):
     sender = models.Account.current_user_account.nickname
   elif request.user:
     sender = request.user.email()
-  message = '%s by %s: %s\n%s' % (message,
+  message = '{0!s} by {1!s}: {2!s}\n{3!s}'.format(message,
                                   sender,
                                   issue.subject,
                                   request.build_absolute_uri(

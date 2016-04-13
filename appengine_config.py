@@ -34,7 +34,7 @@ def appstats_normalize_path(path):
     return re.sub(r'\d+', 'X', path)
 
 # Segregate Appstats by runtime (python vs. python27).
-appstats_KEY_NAMESPACE = '__appstats_%s__' % os.getenv('APPENGINE_RUNTIME')
+appstats_KEY_NAMESPACE = '__appstats_{0!s}__'.format(os.getenv('APPENGINE_RUNTIME'))
 
 # Enable Interactive Playground.
 appstats_SHELL_OK = True

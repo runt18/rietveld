@@ -40,7 +40,7 @@ class AlreadyLockedException(Exception):
 def validate_file(filename):
   if os.path.islink(filename):
     raise CredentialsFileSymbolicLinkError(
-        'File: %s is a symbolic link.' % filename)
+        'File: {0!s} is a symbolic link.'.format(filename))
 
 class _Opener(object):
   """Base class for different locking primitives."""
@@ -103,8 +103,8 @@ class _PosixOpener(_Opener):
       CredentialsFileSymbolicLinkError if the file is a symbolic link.
     """
     if self._locked:
-      raise AlreadyLockedException('File %s is already locked' %
-                                   self._filename)
+      raise AlreadyLockedException('File {0!s} is already locked'.format(
+                                   self._filename))
     self._locked = False
 
     validate_file(self._filename)
@@ -129,7 +129,7 @@ class _PosixOpener(_Opener):
         if e.errno != errno.EEXIST:
           raise
         if (time.time() - start_time) >= timeout:
-          logger.warn('Could not acquire lock %s in %s seconds' % (
+          logger.warn('Could not acquire lock {0!s} in {1!s} seconds'.format(
               lock_filename, timeout))
           # Close the file and open in fallback_mode.
           if self._fh:
@@ -151,7 +151,7 @@ class _PosixOpener(_Opener):
 
   def _posix_lockfile(self, filename):
     """The name of the lock file to use for posix locking."""
-    return '%s.lock' % filename
+    return '{0!s}.lock'.format(filename)
 
 
 try:
@@ -173,8 +173,8 @@ try:
         CredentialsFileSymbolicLinkError if the file is a symbolic link.
       """
       if self._locked:
-        raise AlreadyLockedException('File %s is already locked' %
-                                     self._filename)
+        raise AlreadyLockedException('File {0!s} is already locked'.format(
+                                     self._filename))
       start_time = time.time()
 
       validate_file(self._filename)
@@ -200,7 +200,7 @@ try:
             raise e
           # We could not acquire the lock. Try again.
           if (time.time() - start_time) >= timeout:
-            logger.warn('Could not lock %s in %s seconds' % (
+            logger.warn('Could not lock {0!s} in {1!s} seconds'.format(
                 self._filename, timeout))
             if self._fh:
               self._fh.close()
@@ -248,8 +248,8 @@ try:
         CredentialsFileSymbolicLinkError if the file is a symbolic link.
       """
       if self._locked:
-        raise AlreadyLockedException('File %s is already locked' %
-                                     self._filename)
+        raise AlreadyLockedException('File {0!s} is already locked'.format(
+                                     self._filename))
       start_time = time.time()
 
       validate_file(self._filename)
@@ -282,7 +282,7 @@ try:
 
           # We could not acquire the lock. Try again.
           if (time.time() - start_time) >= timeout:
-            logger.warn('Could not lock %s in %s seconds' % (
+            logger.warn('Could not lock {0!s} in {1!s} seconds'.format(
                 self._filename, timeout))
             if self._fh:
               self._fh.close()

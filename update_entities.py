@@ -51,4 +51,4 @@ def run(model_class, batch_size=100, last_key=None):
           logging.warn("Put timed out, retrying")
 
       last_key = keys[-1]
-      print "Updated %d records" % (len(keys),)
+      print "Updated {0:d} records".format(len(keys))

@@ -38,7 +38,7 @@ import yaml
 def default_auth_func():
   user = os.environ.get('EMAIL_ADDRESS')
   if user:
-    print('User: %s' % user)
+    print('User: {0!s}'.format(user))
   else:
     user = raw_input('Username:')
   return user, getpass.getpass('Password:')
@@ -59,7 +59,7 @@ def default_app_id(directory):
 def setup_env(app_id, host=None, auth_func=None):
   """Setup remote access to a GAE instance."""
   auth_func = auth_func or smart_auth_func
-  host = host or '%s.appspot.com' % app_id
+  host = host or '{0!s}.appspot.com'.format(app_id)
 
   # pylint: disable=W0612
   from google.appengine.api import memcache

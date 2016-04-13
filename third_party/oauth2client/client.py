@@ -490,7 +490,7 @@ class OAuth2Credentials(Credentials):
                                    redirections, connection_type)
 
       if resp.status in REFRESH_STATUS_CODES:
-        logger.info('Refreshing due to a %s' % str(resp.status))
+        logger.info('Refreshing due to a {0!s}'.format(str(resp.status)))
         self._refresh(request_orig)
         self.apply(headers)
         return request_orig(uri, method, body, clean_headers(headers),
@@ -696,8 +696,8 @@ class OAuth2Credentials(Credentials):
     else:
       # An {'error':...} response body means the token is expired or revoked,
       # so we flag the credentials as such.
-      logger.info('Failed to retrieve access token: %s' % content)
-      error_msg = 'Invalid response %s.' % resp['status']
+      logger.info('Failed to retrieve access token: {0!s}'.format(content))
+      error_msg = 'Invalid response {0!s}.'.format(resp['status'])
       try:
         d = simplejson.loads(content)
         if 'error' in d:
@@ -737,7 +737,7 @@ class OAuth2Credentials(Credentials):
     if resp.status == 200:
       self.invalid = True
     else:
-      error_msg = 'Invalid response %s.' % resp.status
+      error_msg = 'Invalid response {0!s}.'.format(resp.status)
       try:
         d = simplejson.loads(content)
         if 'error' in d:
@@ -1011,7 +1011,7 @@ if HAS_CRYPTO:
       certs = simplejson.loads(content)
       return crypt.verify_signed_jwt_with_certs(id_token, certs, audience)
     else:
-      raise VerifyJwtTokenError('Status code: %d' % resp.status)
+      raise VerifyJwtTokenError('Status code: {0:d}'.format(resp.status))
 
 
 def _urlsafe_b64decode(b64string):
@@ -1036,7 +1036,7 @@ def _extract_id_token(id_token):
 
   if (len(segments) != 3):
     raise VerifyJwtTokenError(
-      'Wrong number of segments in token: %s' % id_token)
+      'Wrong number of segments in token: {0!s}'.format(id_token))
 
   return simplejson.loads(_urlsafe_b64decode(segments[1]))
 
@@ -1301,12 +1301,12 @@ class OAuth2WebServerFlow(Flow):
                                id_token=d.get('id_token', None),
                                token_response=d)
     else:
-      logger.info('Failed to retrieve access token: %s' % content)
+      logger.info('Failed to retrieve access token: {0!s}'.format(content))
       if 'error' in d:
         # you never know what those providers got to say
         error_msg = unicode(d['error'])
       else:
-        error_msg = 'Invalid response: %s.' % str(resp.status)
+        error_msg = 'Invalid response: {0!s}.'.format(str(resp.status))
       raise FlowExchangeError(error_msg)
 
 
@@ -1361,4 +1361,4 @@ def flow_from_clientsecrets(filename, scope, redirect_uri=None,
       raise
   else:
     raise UnknownClientSecretsFlowError(
-        'This OAuth 2.0 flow is unsupported: %r' % client_type)
+        'This OAuth 2.0 flow is unsupported: {0!r}'.format(client_type))

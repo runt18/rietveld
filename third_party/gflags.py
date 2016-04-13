@@ -495,7 +495,7 @@ class DuplicateFlagError(DuplicateFlag):
     else:
       second_module = other_flag_values.FindModuleDefiningFlag(
           flagname, default='<unknown>')
-    msg = "The flag '%s' is defined twice. First from %s, Second from %s" % (
+    msg = "The flag '{0!s}' is defined twice. First from {1!s}, Second from {2!s}".format(
         self.flagname, first_module, second_module)
     DuplicateFlag.__init__(self, msg)
 
@@ -522,7 +522,7 @@ class UnrecognizedFlagError(UnrecognizedFlag):
     self.flagname = flagname
     self.flagvalue = flagvalue
     UnrecognizedFlag.__init__(
-        self, "Unknown command line flag '%s'" % flagname)
+        self, "Unknown command line flag '{0!s}'".format(flagname))
 
 # Global variable used by expvar
 _exported_flags = {}
@@ -1090,7 +1090,7 @@ class FlagValues:
         validator.Verify(self)
       except gflags_validators.Error, e:
         message = validator.PrintFlagsWithValues(self)
-        raise IllegalFlagValue('%s: %s' % (message, str(e)))
+        raise IllegalFlagValue('{0!s}: {1!s}'.format(message, str(e)))
 
   def _FlagIsRegistered(self, flag_obj):
     """Checks whether a Flag object is registered under some name.
@@ -1237,9 +1237,9 @@ class FlagValues:
         arg = argv[arg_idx]
         if arg.find('=') >= 0: continue
         if arg.startswith('--'+prefix) and ('--'+name).startswith(arg):
-          argv[arg_idx] = ('--%s=true' % name)
+          argv[arg_idx] = ('--{0!s}=true'.format(name))
         elif arg.startswith('--'+no_prefix) and ('--'+no_name).startswith(arg):
-          argv[arg_idx] = ('--%s=false' % name)
+          argv[arg_idx] = ('--{0!s}=false'.format(name))
 
     # Loop over all of the flags, building up the lists of short options
     # and long options that will be passed to getopt.  Short options are
@@ -1390,7 +1390,7 @@ class FlagValues:
     """Generates a help string for a given module."""
     if not isinstance(module, str):
       module = module.__name__
-    output_lines.append('\n%s%s:' % (prefix, module))
+    output_lines.append('\n{0!s}{1!s}:'.format(prefix, module))
     self.__RenderFlagList(flags, output_lines, prefix + "  ")
 
   def __RenderOurModuleFlags(self, module, output_lines, prefix=""):
@@ -1450,11 +1450,11 @@ class FlagValues:
       if flag in flagset: continue
       flagset[flag] = 1
       flaghelp = ""
-      if flag.short_name: flaghelp += "-%s," % flag.short_name
+      if flag.short_name: flaghelp += "-{0!s},".format(flag.short_name)
       if flag.boolean:
-        flaghelp += "--[no]%s" % flag.name + ":"
+        flaghelp += "--[no]{0!s}".format(flag.name) + ":"
       else:
-        flaghelp += "--%s" % flag.name + ":"
+        flaghelp += "--{0!s}".format(flag.name) + ":"
       flaghelp += "  "
       if flag.help:
         flaghelp += flag.help
@@ -1462,11 +1462,11 @@ class FlagValues:
                           firstline_indent=prefix)
       if flag.default_as_str:
         flaghelp += "\n"
-        flaghelp += TextWrap("(default: %s)" % flag.default_as_str,
+        flaghelp += TextWrap("(default: {0!s})".format(flag.default_as_str),
                              indent=prefix+"  ")
       if flag.parser.syntactic_help:
         flaghelp += "\n"
-        flaghelp += TextWrap("(%s)" % flag.parser.syntactic_help,
+        flaghelp += TextWrap("({0!s})".format(flag.parser.syntactic_help),
                              indent=prefix+"  ")
       output_lines.append(flaghelp)
 
@@ -1491,7 +1491,7 @@ class FlagValues:
     for name, flag in fl.items():
       sorted_flags.append(name)
       if flag.boolean:
-        sorted_flags.append('no%s' % name)
+        sorted_flags.append('no{0!s}'.format(name))
     sorted_flags.sort()
 
     # For each name in the sorted list, determine the shortest unique
@@ -1547,7 +1547,7 @@ class FlagValues:
     elif flagfile_str.startswith('-flagfile='):
       return os.path.expanduser((flagfile_str[(len('-flagfile=')):]).strip())
     else:
-      raise FlagsError('Hit illegal --flagfile type: %s' % flagfile_str)
+      raise FlagsError('Hit illegal --flagfile type: {0!s}'.format(flagfile_str))
 
   def __GetFlagFileLines(self, filename, parsed_file_list):
     """Returns the useful (!=comments, etc) lines from a file with flags.
@@ -1571,7 +1571,7 @@ class FlagValues:
     try:
       file_obj = open(filename, 'r')
     except IOError, e_msg:
-      raise CantOpenFlagFileError('ERROR:: Unable to open flagfile: %s' % e_msg)
+      raise CantOpenFlagFileError('ERROR:: Unable to open flagfile: {0!s}'.format(e_msg))
 
     line_list = file_obj.readlines()
     file_obj.close()
@@ -1594,8 +1594,7 @@ class FlagValues:
                                                    parsed_file_list)
           flag_line_list.extend(included_flags)
         else:  # Case of hitting a circularly included file.
-          sys.stderr.write('Warning: Hit circular flagfile dependency: %s\n' %
-                           (sub_filename,))
+          sys.stderr.write('Warning: Hit circular flagfile dependency: {0!s}\n'.format(sub_filename))
       else:
         # Any line that's not a comment or a nested flagfile should get
         # copied into 2nd position.  This leaves earlier arguments
@@ -1722,7 +1721,7 @@ class FlagValues:
 
     usage_doc = sys.modules['__main__'].__doc__
     if not usage_doc:
-      usage_doc = '\nUSAGE: %s [flags]\n' % sys.argv[0]
+      usage_doc = '\nUSAGE: {0!s} [flags]\n'.format(sys.argv[0])
     else:
       usage_doc = usage_doc.replace('%s', sys.argv[0])
     _WriteSimpleXMLElement(outfile, 'usage', usage_doc, indent)
@@ -1801,7 +1800,7 @@ def _WriteSimpleXMLElement(outfile, name, value, indent):
     # Display boolean values as the C++ flag library does: no caps.
     value_str = value_str.lower()
   safe_value_str = _MakeXMLSafe(value_str)
-  outfile.write('%s<%s>%s</%s>\n' % (indent, name, safe_value_str, name))
+  outfile.write('{0!s}<{1!s}>{2!s}</{3!s}>\n'.format(indent, name, safe_value_str, name))
 
 
 class Flag:
@@ -1884,7 +1883,7 @@ class Flag:
     try:
       self.value = self.parser.Parse(argument)
     except ValueError, e:  # recast ValueError as IllegalFlagValue
-      raise IllegalFlagValue("flag --%s=%s: %s" % (self.name, argument, e))
+      raise IllegalFlagValue("flag --{0!s}={1!s}: {2!s}".format(self.name, argument, e))
     self.present += 1
 
   def Unparse(self):
@@ -1899,13 +1898,13 @@ class Flag:
       return ''
     if self.boolean:
       if self.value:
-        return "--%s" % self.name
+        return "--{0!s}".format(self.name)
       else:
-        return "--no%s" % self.name
+        return "--no{0!s}".format(self.name)
     else:
       if not self.serializer:
-        raise FlagsError("Serializer not present for flag %s" % self.name)
-      return "--%s=%s" % (self.name, self.serializer.Serialize(self.value))
+        raise FlagsError("Serializer not present for flag {0!s}".format(self.name))
+      return "--{0!s}={1!s}".format(self.name, self.serializer.Serialize(self.value))
 
   def SetDefault(self, value):
     """Changes the default value (and current value too) for this Flag."""
@@ -2122,7 +2121,7 @@ def MarkFlagAsRequired(flag_name, flag_values=FLAGS):
   """
   RegisterValidator(flag_name,
                     lambda value: value is not None,
-                    message='Flag --%s must be specified.' % flag_name,
+                    message='Flag --{0!s} must be specified.'.format(flag_name),
                     flag_values=flag_values)
 
 
@@ -2139,7 +2138,7 @@ def _RegisterBoundsValidatorIfNeeded(parser, name, flag_values):
 
     def Checker(value):
       if value is not None and parser.IsOutsideBounds(value):
-        message = '%s is not %s' % (value, parser.syntactic_help)
+        message = '{0!s} is not {1!s}'.format(value, parser.syntactic_help)
         raise gflags_validators.Error(message)
       return True
 
@@ -2283,8 +2282,7 @@ def ADOPT_module_key_flags(module, flag_values=FLAGS):
   # isinstance(module, types.ModuleType) but I didn't want to import
   # types for such a tiny use.
   if isinstance(module, str):
-    raise FlagsError('Received module name %s; expected a module object.'
-                     % module)
+    raise FlagsError('Received module name {0!s}; expected a module object.'.format(module))
   _InternalDeclareKeyFlags(
       [f.name for f in flag_values._GetKeyFlagsForModule(module.__name__)],
       flag_values=flag_values)
@@ -2396,7 +2394,7 @@ class HelpFlag(BooleanFlag):
     if arg:
       doc = sys.modules["__main__"].__doc__
       flags = str(FLAGS)
-      print doc or ("\nUSAGE: %s [flags]\n" % sys.argv[0])
+      print doc or ("\nUSAGE: {0!s} [flags]\n".format(sys.argv[0]))
       if flags:
         print "flags:"
         print flags
@@ -2426,7 +2424,7 @@ class HelpshortFlag(BooleanFlag):
     if arg:
       doc = sys.modules["__main__"].__doc__
       flags = FLAGS.MainModuleHelp()
-      print doc or ("\nUSAGE: %s [flags]\n" % sys.argv[0])
+      print doc or ("\nUSAGE: {0!s} [flags]\n".format(sys.argv[0]))
       if flags:
         print "flags:"
         print flags
@@ -2450,7 +2448,7 @@ class NumericParser(ArgumentParser):
   def Parse(self, argument):
     val = self.Convert(argument)
     if self.IsOutsideBounds(val):
-      raise ValueError("%s is not %s" % (val, self.syntactic_help))
+      raise ValueError("{0!s} is not {1!s}".format(val, self.syntactic_help))
     return val
 
   def WriteCustomInfoInXMLFormat(self, outfile, indent):
@@ -2485,15 +2483,15 @@ class FloatParser(NumericParser):
     self.upper_bound = upper_bound
     sh = self.syntactic_help
     if lower_bound is not None and upper_bound is not None:
-      sh = ("%s in the range [%s, %s]" % (sh, lower_bound, upper_bound))
+      sh = ("{0!s} in the range [{1!s}, {2!s}]".format(sh, lower_bound, upper_bound))
     elif lower_bound == 0:
-      sh = "a non-negative %s" % self.number_name
+      sh = "a non-negative {0!s}".format(self.number_name)
     elif upper_bound == 0:
-      sh = "a non-positive %s" % self.number_name
+      sh = "a non-positive {0!s}".format(self.number_name)
     elif upper_bound is not None:
-      sh = "%s <= %s" % (self.number_name, upper_bound)
+      sh = "{0!s} <= {1!s}".format(self.number_name, upper_bound)
     elif lower_bound is not None:
-      sh = "%s >= %s" % (self.number_name, lower_bound)
+      sh = "{0!s} >= {1!s}".format(self.number_name, lower_bound)
     self.syntactic_help = sh
 
   def Convert(self, argument):
@@ -2537,19 +2535,19 @@ class IntegerParser(NumericParser):
     self.upper_bound = upper_bound
     sh = self.syntactic_help
     if lower_bound is not None and upper_bound is not None:
-      sh = ("%s in the range [%s, %s]" % (sh, lower_bound, upper_bound))
+      sh = ("{0!s} in the range [{1!s}, {2!s}]".format(sh, lower_bound, upper_bound))
     elif lower_bound == 1:
-      sh = "a positive %s" % self.number_name
+      sh = "a positive {0!s}".format(self.number_name)
     elif upper_bound == -1:
-      sh = "a negative %s" % self.number_name
+      sh = "a negative {0!s}".format(self.number_name)
     elif lower_bound == 0:
-      sh = "a non-negative %s" % self.number_name
+      sh = "a non-negative {0!s}".format(self.number_name)
     elif upper_bound == 0:
-      sh = "a non-positive %s" % self.number_name
+      sh = "a non-positive {0!s}".format(self.number_name)
     elif upper_bound is not None:
-      sh = "%s <= %s" % (self.number_name, upper_bound)
+      sh = "{0!s} <= {1!s}".format(self.number_name, upper_bound)
     elif lower_bound is not None:
-      sh = "%s >= %s" % (self.number_name, lower_bound)
+      sh = "{0!s} >= {1!s}".format(self.number_name, lower_bound)
     self.syntactic_help = sh
 
   def Convert(self, argument):
@@ -2596,8 +2594,8 @@ class EnumParser(ArgumentParser):
 
   def Parse(self, argument):
     if self.enum_values and argument not in self.enum_values:
-      raise ValueError("value should be one of <%s>" %
-                       "|".join(self.enum_values))
+      raise ValueError("value should be one of <{0!s}>".format(
+                       "|".join(self.enum_values)))
     return argument
 
   def Type(self):
@@ -2614,7 +2612,7 @@ class EnumFlag(Flag):
     g = ArgumentSerializer()
     Flag.__init__(self, p, g, name, default, help, short_name, **args)
     if not self.help: self.help = "an enum string"
-    self.help = "<%s>: %s" % ("|".join(enum_values), self.help)
+    self.help = "<{0!s}>: {1!s}".format("|".join(enum_values), self.help)
 
   def _WriteCustomInfoInXMLFormat(self, outfile, indent):
     for enum_value in self.parser.enum_values:
@@ -2649,7 +2647,7 @@ class BaseListParser(ArgumentParser):
     super(BaseListParser, self).__init__()
     self._token = token
     self._name = name
-    self.syntactic_help = "a %s separated list" % self._name
+    self.syntactic_help = "a {0!s} separated list".format(self._name)
 
   def Parse(self, argument):
     if isinstance(argument, list):
@@ -2660,7 +2658,7 @@ class BaseListParser(ArgumentParser):
       return [s.strip() for s in argument.split(self._token)]
 
   def Type(self):
-    return '%s separated list of strings' % self._name
+    return '{0!s} separated list of strings'.format(self._name)
 
 
 class ListParser(BaseListParser):
@@ -2762,7 +2760,7 @@ class MultiFlag(Flag):
 
   def Serialize(self):
     if not self.serializer:
-      raise FlagsError("Serializer not present for flag %s" % self.name)
+      raise FlagsError("Serializer not present for flag {0!s}".format(self.name))
     if self.value is None:
       return ''
 

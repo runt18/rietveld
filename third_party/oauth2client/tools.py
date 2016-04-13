@@ -157,7 +157,7 @@ def run(flow, storage, http=None):
       print
 
   if FLAGS.auth_local_webserver:
-    oauth_callback = 'http://%s:%s/' % (FLAGS.auth_host_name, port_number)
+    oauth_callback = 'http://{0!s}:{1!s}/'.format(FLAGS.auth_host_name, port_number)
   else:
     oauth_callback = OOB_CALLBACK_URN
   flow.redirect_uri = oauth_callback
@@ -196,7 +196,7 @@ def run(flow, storage, http=None):
   try:
     credential = flow.step2_exchange(code, http=http)
   except FlowExchangeError, e:
-    sys.exit('Authentication has failed: %s' % e)
+    sys.exit('Authentication has failed: {0!s}'.format(e))
 
   storage.put(credential)
   credential.set_store(storage)

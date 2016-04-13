@@ -261,7 +261,7 @@ def safename(filename):
 
 NORMALIZE_SPACE = re.compile(r'(?:\r\n)?[ \t]+')
 def _normalize_headers(headers):
-    return dict([ (key.lower(), NORMALIZE_SPACE.sub(value, ' ').strip())  for (key, value) in headers.iteritems()])
+    return {key.lower(): NORMALIZE_SPACE.sub(value, ' ').strip()  for (key, value) in headers.iteritems()}
 
 def _parse_cache_control(headers):
     retval = {}

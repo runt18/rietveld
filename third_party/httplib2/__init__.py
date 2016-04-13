@@ -371,7 +371,7 @@ def _entry_disposition(response_headers, request_headers):
                 freshness_lifetime = 0
         elif response_headers.has_key('expires'):
             expires = email.Utils.parsedate_tz(response_headers['expires'])
-            if None == expires:
+            if None is expires:
                 freshness_lifetime = 0
             else:
                 freshness_lifetime = max(0, calendar.timegm(expires) - date)
@@ -768,7 +768,7 @@ class ProxyInfo(object):
                 self.proxy_rdns, self.proxy_user, self.proxy_pass)
 
     def isgood(self):
-        return (self.proxy_host != None) and (self.proxy_port != None)
+        return (self.proxy_host is not None) and (self.proxy_port is not None)
 
     def applies_to(self, hostname):
         return not self.bypass_host(hostname)
@@ -1342,7 +1342,7 @@ class Http(object):
                     if response.has_key('location'):
                         location = response['location']
                         (scheme, authority, path, query, fragment) = parse_uri(location)
-                        if authority == None:
+                        if authority is None:
                             response['location'] = urlparse.urljoin(absolute_uri, location)
                     if response.status == 301 and method in ["GET", "HEAD"]:
                         response['-x-permanent-redirect-url'] = response['location']

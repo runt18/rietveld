@@ -1229,7 +1229,7 @@ def upload_complete(request, patchset_id=None):
   errors = []
   if patchset is not None:
     query = models.Patch.query(
-        models.Patch.is_binary == False, models.Patch.status == None,
+        models.Patch.is_binary == False, models.Patch.status is None,
         ancestor=patchset.key)
     # All uploaded files have a status, any with status==None are missing.
     if query.count() > 0:
@@ -2094,7 +2094,7 @@ def _get_diff_table_rows(request, patch, context, column_width):
   if rows and rows[-1] is None:
     del rows[-1]
     # Get rid of content, which may be bad
-    if content.is_uploaded and content.text != None:
+    if content.is_uploaded and content.text is not None:
       # Don't delete uploaded content, otherwise get_content()
       # will fetch it.
       content.is_bad = True
@@ -3268,7 +3268,7 @@ def search(request):
 def repos(request):
   """/repos - Show the list of known Subversion repositories."""
   # Clean up garbage created by buggy edits
-  bad_branch_keys = models.Branch.query(models.Branch.owner == None).fetch(
+  bad_branch_keys = models.Branch.query(models.Branch.owner is None).fetch(
       100, keys_only=True)
   if bad_branch_keys:
     ndb.delete_multi(bad_branch_keys)
@@ -4275,7 +4275,7 @@ def yield_people_issue_to_update(day_to_process, issues, messages_looked_up):
       for user in figure_out_real_accounts(people_to_consider, people_caches):
         message_index, drive_by = search_relevant_first_email_for_user(
             issue_owner, messages, user, people_caches)
-        if (message_index == None or
+        if (message_index is None or
             ( drive_by and
               messages[message_index].sender == user and
               not any(m.sender == issue_owner
